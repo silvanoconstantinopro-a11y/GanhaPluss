@@ -4,11 +4,7 @@
   <meta charset="utf-8">
   <title>GanhaPlus — Painel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- Fonte moderna -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- Estilos globais -->
   <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -59,15 +55,15 @@
         <!-- Assistir Vídeos -->
         <div class="tarefa-card">
           <h3>Assistir Vídeos</h3>
-          <p>+700 AOA por vídeo completo</p>
-          <button id="fazer-video" class="btn-primary">Assistir</button>
+          <p>+500 AOA por vídeo (4 anúncios)</p>
+          <button id="btn-assistir" class="btn-primary">Assistir</button>
         </div>
 
         <!-- Compartilhar Link -->
         <div class="tarefa-card">
           <h3>Compartilhar Link</h3>
-          <p>+700 AOA por compartilhamento</p>
-          <button id="fazer-compartilhar" class="btn-primary">Compartilhar</button>
+          <p>+500 AOA por compartilhamento</p>
+          <button id="btn-compartilhar" class="btn-primary">Compartilhar</button>
         </div>
       </div>
     </section>
@@ -88,14 +84,14 @@
       // Carregar saldo automaticamente
       if (typeof carregarPainel === 'function') carregarPainel();
 
-      // Assistir vídeos
-      document.getElementById('fazer-video')?.addEventListener('click', async () => {
-        try { await abrirSequenciaVideos(); }
+      // Assistir vídeos (chama a função correta do app.js)
+      document.getElementById('btn-assistir')?.addEventListener('click', async () => {
+        try { await abrirSequenciaAnuncios(); }
         catch (err) { alert('Erro ao assistir vídeos: ' + (err?.message || err)); }
       });
 
       // Compartilhar link
-      document.getElementById('fazer-compartilhar')?.addEventListener('click', async () => {
+      document.getElementById('btn-compartilhar')?.addEventListener('click', async () => {
         try { await compartilhar(); }
         catch (err) { alert('Erro ao compartilhar link: ' + (err?.message || err)); }
       });

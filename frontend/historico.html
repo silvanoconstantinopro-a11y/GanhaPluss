@@ -5,62 +5,60 @@
   <title>GanhaPlus — Histórico</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Fonte moderna -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- CSS global -->
   <link rel="stylesheet" href="styles.css">
+  <style>
+    .history-card { padding:10px; margin-bottom:10px; border-radius:8px; background:#111; color:#fff; border:1px solid #333; }
+    .history-card strong { color:#0af; }
+    .history-card small { display:block; color:#888; margin-top:4px; }
+  </style>
 </head>
 
 <body class="theme-dark dashboard-page">
 
-  <!-- Botão hambúrguer -->
   <button id="toggle-sidebar" class="btn-hamburger" aria-label="Menu">
-    <span></span>
-    <span></span>
-    <span></span>
+    <span></span><span></span><span></span>
   </button>
 
-  <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-header">
       <h2 class="brand">GanhaPlus</h2>
       <span class="tag">Menu</span>
     </div>
-
     <nav class="menu">
       <a href="principal.html">🏠 Painel</a>
       <a href="tarefa.html">🎯 Tarefas</a>
       <a class="active" href="historico.html">📜 Histórico</a>
       <a href="saque.html">💸 Saque</a>
     </nav>
-
     <button id="btn-logout" class="logout-btn">Sair</button>
   </aside>
 
-  <!-- Conteúdo principal -->
   <main class="main-content">
-
-    <!-- Topbar -->
     <header class="topbar">
       <h1>Histórico de Atividades</h1>
       <p class="subtitle">Veja todas as ações realizadas na plataforma</p>
     </header>
 
-    <!-- Lista de histórico -->
     <section class="section-block">
       <h2 class="section-title">Registos</h2>
       <div id="historico-lista" class="history-list">
         <!-- Histórico carregado dinamicamente pelo app.js -->
       </div>
     </section>
-
   </main>
 
-  <!-- Scripts -->
   <script src="app.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
+      const toggleBtn = document.getElementById('toggle-sidebar');
+      const sidebar = document.querySelector('.sidebar');
+
+      toggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('sidebar-hidden');
+        toggleBtn.classList.toggle('active');
+      });
+
       // Logout
       document.getElementById('btn-logout')?.addEventListener('click', () => {
         localStorage.removeItem('gp_token');
@@ -69,16 +67,13 @@
 
       // Carregar histórico automaticamente
       if (typeof carregarHistorico === 'function') {
-        carregarHistorico();
+        try {
+          await carregarHistorico();
+        } catch (err) {
+          console.error("Erro ao carregar histórico:", err);
+          alert("Erro ao carregar histórico. Faça login novamente.");
+        }
       }
-
-      // Toggle sidebar
-      const toggleBtn = document.getElementById('toggle-sidebar');
-      const sidebar = document.querySelector('.sidebar');
-      toggleBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('sidebar-hidden');
-        toggleBtn.classList.toggle('active');
-      });
     });
   </script>
 

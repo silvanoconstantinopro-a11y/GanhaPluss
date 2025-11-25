@@ -1,132 +1,120 @@
 /**
  * ===========================================================
- *        GANHAPLUS - FRONTEND PROFISSIONAL v5.0
- *        Código Limpo, Organizado e Preparado p/ Anúncios
+ *      GANHAPLUS - FRONTEND PROFISSIONAL v7.0 (SEGURANÇA OTIMIZADA)
  * ===========================================================
  */
 
-const BASE_URL = 'https://ganhapluss-1.onrender.com';
-const TOKEN_KEY = 'gp_token';
+const BASE_URL = "http://localhost:4000";
+const TOKEN_KEY = "gp_token";
 
-const RECOMPENSA_ANUNCIO = 500; 
+const RECOMPENSA_ANUNCIO = 500;
 const MAX_ADS = 4;
 
 /* ===========================================================
-   TOKEN E SESSÃO
+   TOKEN E AUTENTICAÇÃO
 =========================================================== */
-function salvarToken(t){ localStorage.setItem(TOKEN_KEY,t); }
-function obterToken(){ return localStorage.getItem(TOKEN_KEY); }
-function sair(){ localStorage.removeItem(TOKEN_KEY); window.location.href = 'login.html'; }
+const salvarToken = t => localStorage.setItem(TOKEN_KEY, t);
+const obterToken = () => localStorage.getItem(TOKEN_KEY);
+const sair = () => { localStorage.removeItem(TOKEN_KEY); window.location.href = "login.html"; };
 
-function parseJwt(token){
-    try { return JSON.parse(atob(token.split('.')[1])); }
+const parseJwt = t => {
+    try { return JSON.parse(atob(t.split(".")[1])); }
     catch { return null; }
-}
+};
 
-async function obterUsuario(){
+async function obterUsuario() {
     const token = obterToken();
-    if(!token) return sair();
+    if (!token) return sair();
     const payload = parseJwt(token);
-    if(!payload?.id) return sair();
+    if (!payload?.id) return sair();
     return payload;
 }
 
 /* ===========================================================
-   REQUEST SEGURO
+   FETCH SEGURO
 =========================================================== */
-async function requestSeguro(url, options = {}){
-    try{
+async function requestSeguro(url, options = {}) {
+    try {
         const r = await fetch(url, options);
         const txt = await r.text();
         let dados;
         try { dados = txt ? JSON.parse(txt) : {}; }
         catch { dados = { raw: txt }; }
         return { ok: r.ok, status: r.status, dados };
-    }catch{
-        return { ok:false, status:0, dados:{ erro:"Erro de rede" } };
+    } catch {
+        return { ok: false, status: 0, dados: { erro: "Erro de conexão" } };
     }
 }
 
 /* ===========================================================
-   LOGIN E REGISTO
+   LOGIN
 =========================================================== */
-async function login(){
+async function login() {
     const telefone = document.getElementById("login-telefone").value.trim();
     const senha = document.getElementById("login-senha").value;
     const msg = document.getElementById("mensagem");
 
-    if(!telefone || !senha){
-        msg.textContent = "Preencha todos os campos!";
-        return;
-    }
+    if (!telefone || !senha) return msg.textContent = "Preencha todos os campos!";
 
-    const { ok, dados } = await requestSeguro(`${BASE_URL}/api/login`,{
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body:JSON.stringify({ telefone, senha })
+    const { ok, dados } = await requestSeguro(`${BASE_URL}/api/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telefone, senha })
     });
 
-    if(!ok){
-        msg.textContent = dados?.erro || "Falha no login";
-        return;
-    }
+    if (!ok) return msg.textContent = dados?.erro || "Erro no login";
 
     salvarToken(dados.token);
     window.location.href = "principal.html";
 }
 
-async function registrar(){
+/* ===========================================================
+   REGISTO
+=========================================================== */
+async function registrar() {
     const telefone = document.getElementById("reg-telefone").value.trim();
     const senha = document.getElementById("reg-senha").value;
     const idade = Number(document.getElementById("reg-idade").value);
     const msg = document.getElementById("mensagem");
 
-    if(!telefone || !senha || !idade){
-        msg.textContent = "Preencha todos os campos!";
-        return;
-    }
-    if(idade < 18){
-        msg.textContent = "Apenas maiores de 18 anos!";
-        return;
-    }
+    if (!telefone || !senha || !idade) return msg.textContent = "Preencha todos os campos!";
+    if (idade < 18) return msg.textContent = "Apenas maiores de 18 anos!";
 
-    const { ok, dados } = await requestSeguro(`${BASE_URL}/api/register`,{
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body:JSON.stringify({ telefone, senha, idade })
+    const { ok, dados } = await requestSeguro(`${BASE_URL}/api/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telefone, senha, idade })
     });
 
-    if(!ok){
-        msg.textContent = dados?.erro || "Erro no registo";
-        return;
-    }
+    if (!ok) return msg.textContent = dados?.erro || "Erro no registo";
 
     salvarToken(dados.token);
     window.location.href = "principal.html";
 }
 
 /* ===========================================================
-   CARREGAR PAINEL
+   PAINEL
 =========================================================== */
-async function carregarPainel(){
-    const perfil = await obterUsuario();
-    const token = obterToken();
-    if(!perfil) return;
+async function carregarPainel() {
+    try {
+        const perfil = await obterUsuario();
+        const token = obterToken();
+        const { ok, dados } = await requestSeguro(`${BASE_URL}/api/saldo/${perfil.id}`, {
+            headers: { "Authorization": "Bearer " + token }
+        });
+        if (ok) document.getElementById("saldo-valor").textContent = `${dados.saldo} AOA`;
 
-    const { ok, dados } = await requestSeguro(`${BASE_URL}/api/saldo/${perfil.id}`,{
-        headers:{ "Authorization":"Bearer "+token }
-    });
-
-    if(ok){
-        document.getElementById("saldo-valor").textContent = `${dados.saldo} AOA`;
+        document.getElementById("fazer-anuncio")?.addEventListener("click", abrirSequenciaAnuncios);
+        document.getElementById("fazer-compartilhar")?.addEventListener("click", compartilhar);
+    } catch (err) {
+        console.error("Erro ao carregar painel:", err);
+        alert("Erro ao carregar o painel. Faça login novamente.");
+        sair();
     }
-
-    document.getElementById("fazer-anuncio")?.addEventListener("click", abrirSequenciaAnuncios);
-    document.getElementById("fazer-compartilhar")?.addEventListener("click", compartilhar);
 }
 
 /* ===========================================================
-   REWARDED ADS
+   SISTEMA DE ANÚNCIOS (GOOGLE IMA)
 =========================================================== */
 const AD_TAGS = [
     "https://pubads.g.doubleclick.net/gampad/ads?...1",
@@ -134,46 +122,50 @@ const AD_TAGS = [
     "https://pubads.g.doubleclick.net/gampad/ads?...3"
 ];
 
-function escolherTag(){ return AD_TAGS[Math.floor(Math.random()*AD_TAGS.length)]; }
+const escolherTag = () => AD_TAGS[Math.floor(Math.random() * AD_TAGS.length)];
 
-function carregarIMA(){
-    return new Promise((resolve,reject)=>{
-        if(window.google?.ima) return resolve();
-        const s=document.createElement("script");
-        s.src="https://imasdk.googleapis.com/js/sdkloader/ima3.js";
-        s.onload=()=> setTimeout(()=>window.google?.ima?resolve():reject(),300);
-        s.onerror=reject;
+function carregarIMA() {
+    return new Promise((resolve, reject) => {
+        if (window.google?.ima) return resolve();
+        const s = document.createElement("script");
+        s.src = "https://imasdk.googleapis.com/js/sdkloader/ima3.js";
+        s.onload = () => setTimeout(() => window.google?.ima ? resolve() : reject("IMA não carregou"), 500);
+        s.onerror = () => reject("Erro ao carregar script IMA");
         document.head.appendChild(s);
     });
 }
 
-async function abrirSequenciaAnuncios(){
-    for(let i = 0; i < MAX_ADS; i++){
-        await executarAnuncio();
+async function abrirSequenciaAnuncios() {
+    try {
+        for (let i = 0; i < MAX_ADS; i++) {
+            await executarAnuncio();
+        }
+        alert(`+${RECOMPENSA_ANUNCIO} AOA creditados!`);
+        carregarPainel();
+    } catch (err) {
+        console.error("Erro na sequência de anúncios:", err);
+        alert("Erro ao carregar anúncios. Tente novamente mais tarde.");
     }
-    alert("Todos anúncios finalizados!");
 }
 
-async function executarAnuncio(){
+async function executarAnuncio() {
     const tag = escolherTag();
     await carregarIMA();
-    await tocarAnuncio(tag);
+    return tocarAnuncio(tag);
 }
 
-function tocarAnuncio(tag){
-    return new Promise((resolve,reject)=>{
-
+function tocarAnuncio(tag) {
+    return new Promise((resolve, reject) => {
         const fundo = document.createElement("div");
-        fundo.style = "position:fixed; inset:0; background:#000c; display:flex; justify-content:center; align-items:center; z-index:9999;";
+        fundo.style = "position:fixed; inset:0; background:#000a; display:flex; justify-content:center; align-items:center; z-index:9999;";
         document.body.appendChild(fundo);
 
         const player = document.createElement("div");
         player.style = "width:90%; max-width:900px; height:70vh; background:#000;";
         fundo.appendChild(player);
 
-        const videoFake = document.createElement("video");
-
-        const display = new google.ima.AdDisplayContainer(player, videoFake);
+        const fakeVideo = document.createElement("video");
+        const display = new google.ima.AdDisplayContainer(player, fakeVideo);
         display.initialize();
 
         const loader = new google.ima.AdsLoader(display);
@@ -182,152 +174,161 @@ function tocarAnuncio(tag){
         req.linearAdSlotWidth = 900;
         req.linearAdSlotHeight = 600;
 
-        loader.addEventListener(
-            google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED, e=>{
-                const manager = e.getAdsManager(videoFake);
-                manager.addEventListener(google.ima.AdEvent.Type.COMPLETE,()=>{ fundo.remove(); creditar(RECOMPENSA_ANUNCIO, tag); resolve(); });
-                try{ manager.init(900,600,google.ima.ViewMode.NORMAL); manager.start(); }
-                catch{ fundo.remove(); reject(); }
-            }
-        );
+        loader.addEventListener(google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED, e => {
+            const manager = e.getAdsManager(fakeVideo);
+            manager.addEventListener(google.ima.AdEvent.Type.COMPLETE, () => {
+                fundo.remove();
+                creditar(RECOMPENSA_ANUNCIO, tag);
+                resolve();
+            });
+            try { manager.init(900, 600, google.ima.ViewMode.NORMAL); manager.start(); }
+            catch { fundo.remove(); reject("Erro ao iniciar anúncio"); }
+        });
 
-        loader.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR,e=>{
+        loader.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, e => {
             fundo.remove();
             reject(e);
         });
 
         loader.requestAds(req);
 
-        setTimeout(()=>{ fundo.remove(); reject("timeout"); },30000);
+        setTimeout(() => { if (document.body.contains(fundo)) fundo.remove(); reject("timeout"); }, 30000);
     });
 }
 
 /* ===========================================================
-   CREDITAR DEPOIS DO ANÚNCIO
+   CREDITAR RECOMPENSA
 =========================================================== */
-async function creditar(valor, ad_id){
-    const token = obterToken();
-    const perfil = await obterUsuario();
-
-    const { ok, dados } = await requestSeguro(`${BASE_URL}/api/tarefa`,{
-        method:"POST",
-        headers:{ 
-            "Content-Type":"application/json",
-            "Authorization":"Bearer "+token
-        },
-        body:JSON.stringify({
-            tipo:"anuncio",
-            descricao:`Assistiu anúncio ${ad_id}`,
-            valor,
-            anuncio_id:ad_id
-        })
-    });
-
-    if(ok){
-        alert(`+${valor} AOA creditados!`);
-        carregarPainel();
+async function creditar(valor, ad_id) {
+    try {
+        const token = obterToken();
+        const perfil = await obterUsuario();
+        const { ok } = await requestSeguro(`${BASE_URL}/api/tarefa`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify({
+                tipo: "anuncio",
+                descricao: `Assistiu anúncio ${ad_id}`,
+                valor,
+                anuncio_id: ad_id
+            })
+        });
+        if (ok) carregarPainel();
+    } catch (err) {
+        console.error("Erro ao creditar:", err);
     }
 }
 
 /* ===========================================================
-   COMPARTILHAMENTO REAL (COM IMAGEM + TEXTO + LINK)
+   COMPARTILHAR
 =========================================================== */
-async function compartilhar(){
-    const perfil = await obterUsuario();
-    const token = obterToken();
+async function compartilhar() {
+    try {
+        const perfil = await obterUsuario();
+        const token = obterToken();
 
-    const link = `${window.location.origin}/?ref=${perfil.id}`;
-    const link_id = `ref-${perfil.id}-${Date.now()}`;
+        const link = `${window.location.origin}/?ref=${perfil.id}`;
+        const link_id = `ref-${perfil.id}-${Date.now()}`;
+        const texto = `🔥 GANHA PLUS 🔥\nGanhe 500 AOA assistindo vídeos!\n${link}`;
 
-    // Copiar link
-    await navigator.clipboard.writeText(link);
+        await navigator.clipboard.writeText(texto);
+        alert("Link copiado! Compartilhe em qualquer rede social.");
 
-    alert("Link copiado! Partilhe e ganhe quando alguém clicar.");
+        await requestSeguro(`${BASE_URL}/api/compartilhar`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+            },
+            body: JSON.stringify({ link_id, plataforma: "Genérico" })
+        });
 
-    // Registrar no backend
-    await requestSeguro(`${BASE_URL}/api/compartilhar`,{
-        method:"POST",
-        headers:{
-            "Content-Type":"application/json",
-            "Authorization":"Bearer "+token
-        },
-        body:JSON.stringify({
-            link_id,
-            plataforma:"WhatsApp"
-        })
-    });
+        // Abrir opções de compartilhamento
+        const facebook = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`;
+        const twitter = `https://twitter.com/intent/tweet?text=${encodeURIComponent(texto)}`;
+        const whatsapp = `https://wa.me/?text=${encodeURIComponent(texto)}`;
 
-    // Abrir WhatsApp com mensagem automática
-    const texto = encodeURIComponent(
-        `🔥 GANHA PLUS 🔥\n\nEstou a ganhar dinheiro real só assistindo anúncios!\nEntra e testa:\n${link}`
-    );
+        const abrirRedes = confirm("Deseja compartilhar agora em redes sociais?");
+        if (abrirRedes) { window.open(facebook, "_blank"); window.open(twitter, "_blank"); window.open(whatsapp, "_blank"); }
 
-    window.open(`https://wa.me/?text=${texto}`, "_blank");
+    } catch (err) {
+        console.error("Erro ao compartilhar:", err);
+        alert("Não foi possível gerar ou compartilhar o link.");
+    }
 }
 
 /* ===========================================================
    HISTÓRICO
 =========================================================== */
-async function carregarHistorico(){
-    const perfil = await obterUsuario();
-    const token = obterToken();
+async function carregarHistorico() {
+    try {
+        const perfil = await obterUsuario();
+        const token = obterToken();
+        const { ok, dados } = await requestSeguro(`${BASE_URL}/api/historico/${perfil.id}`, {
+            headers: { "Authorization": "Bearer " + token }
+        });
+        if (!ok) return;
 
-    const { ok, dados } = await requestSeguro(`${BASE_URL}/api/historico/${perfil.id}`,{
-        headers:{ "Authorization":"Bearer "+token }
-    });
-
-    if(!ok) return;
-
-    const lista = document.getElementById("historico-lista");
-    lista.innerHTML = dados.historico.map(h=>`
-        <div class="card">
-            <strong>${h.tipo}</strong> — ${h.descricao}
-            <span style="float:right">${h.valor} AOA</span>
-            <br><small>${h.criado_em}</small>
-        </div>
-    `).join("");
+        const lista = document.getElementById("historico-lista");
+        lista.innerHTML = dados.historico.map(h => `
+            <div class="card">
+                <strong>${h.tipo}</strong> — ${h.descricao}
+                <span style="float:right">${h.valor} AOA</span>
+                <br><small>${h.criado_em}</small>
+            </div>
+        `).join("");
+    } catch (err) {
+        console.error("Erro ao carregar histórico:", err);
+    }
 }
 
 /* ===========================================================
    SAQUE
 =========================================================== */
-async function carregarSaque(){
-    document.getElementById("btn-withdraw")?.addEventListener("click", async()=>{
-        const valor = Number(document.getElementById("withdraw-valor").value);
-        const numero = document.getElementById("withdraw-express").value;
-        const msg = document.getElementById("withdraw-msg");
+async function carregarSaque() {
+    document.getElementById("btn-withdraw")?.addEventListener("click", async () => {
+        try {
+            const valor = Number(document.getElementById("withdraw-valor").value);
+            const numero = document.getElementById("withdraw-express").value;
+            const msg = document.getElementById("withdraw-msg");
 
-        const token = obterToken();
-        const perfil = await obterUsuario();
+            const perfil = await obterUsuario();
+            const token = obterToken();
 
-        const { ok, dados } = await requestSeguro(`${BASE_URL}/api/withdraw`,{
-            method:"POST",
-            headers:{ "Content-Type":"application/json","Authorization":"Bearer "+token },
-            body:JSON.stringify({ valor, numero_express:numero })
-        });
+            const { ok, dados } = await requestSeguro(`${BASE_URL}/api/withdraw`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+                body: JSON.stringify({ valor, numero_express: numero })
+            });
 
-        if(!ok){
-            msg.style.color="red";
-            msg.textContent = dados?.erro || "Erro";
-            return;
+            msg.style.color = ok ? "green" : "red";
+            msg.textContent = ok ? dados.mensagem : dados.erro;
+            if (ok) carregarPainel();
+        } catch (err) {
+            console.error("Erro no saque:", err);
+            alert("Erro ao solicitar saque. Tente novamente.");
         }
-
-        msg.style.color="green";
-        msg.textContent = dados.mensagem;
-        carregarPainel();
     });
 }
 
 /* ===========================================================
    INICIALIZAÇÃO
 =========================================================== */
-document.addEventListener("DOMContentLoaded",()=>{
+document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btn-login")?.addEventListener("click", login);
     document.getElementById("btn-registar")?.addEventListener("click", registrar);
     document.getElementById("btn-logout")?.addEventListener("click", sair);
 
     const path = window.location.pathname;
-    if(path.endsWith("principal.html")) carregarPainel();
-    if(path.endsWith("Historico.html")) carregarHistorico();
-    if(path.endsWith("saque.html")) carregarSaque();
+    if (path.endsWith("principal.html")) carregarPainel();
+    if (path.endsWith("Historico.html")) carregarHistorico();
+    if (path.endsWith("saque.html")) carregarSaque();
 });
+window.abrirSequenciaAnuncios = abrirSequenciaAnuncios;
+window.obterUsuario = obterUsuario;
+window.carregarPainel = carregarPainel;
+window.requestSeguro = requestSeguro;
+

@@ -4,11 +4,8 @@
   <meta charset="utf-8">
   <title>GanhaPlus — Tarefas</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <!-- Fonte moderna -->
+  <link rel="icon" href="favicon.ico">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- CSS global -->
   <link rel="stylesheet" href="styles.css">
 </head>
 
@@ -38,39 +35,36 @@
 
   <!-- Conteúdo principal -->
   <main class="main-content">
-
-    <!-- Topbar -->
     <header class="topbar">
       <h1>Tarefas Disponíveis</h1>
-      <p class="subtitle">Assista vídeos e compartilhe links para ganhar Kwanzas</p>
+      <p class="subtitle">Assista vídeos e compartilhe links para ganhar <b>500 AOA</b></p>
       <p id="limite-anuncios" class="limite-info">
         Você pode assistir <b>20 vídeos a cada 8 horas</b>.
       </p>
     </header>
 
-    <!-- Seção de Tarefas -->
     <section class="section-block">
       <h2 class="section-title">Ações</h2>
       <div class="tarefas-row">
+
         <!-- Assistir vídeo -->
         <div class="tarefa-card">
           <h3>Assistir Vídeos</h3>
-          <p>+700 AOA por cada 4 vídeos completos</p>
+          <p>+500 AOA por vídeo (4 anúncios cada vídeo)</p>
           <button id="btn-assistir" class="btn-primary">Assistir Vídeo</button>
         </div>
 
         <!-- Compartilhar link -->
         <div class="tarefa-card">
           <h3>Compartilhar Link</h3>
-          <p>Compartilhe e ganhe 700 AOA</p>
+          <p>+500 AOA por compartilhamento</p>
           <button id="btn-compartilhar" class="btn-primary">Compartilhar</button>
         </div>
+
       </div>
     </section>
-
   </main>
 
-  <!-- Script principal -->
   <script src="app.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -89,41 +83,64 @@
         window.location.href = 'login.html';
       });
 
-      // Assistir 4 vídeos consecutivos
+      // Assistir vídeo: abre 4 anúncios consecutivos
       document.getElementById('btn-assistir')?.addEventListener('click', async () => {
-        try { await abrirSequenciaVideos(); }
-        catch (err) { alert('Erro ao assistir os vídeos: ' + (err?.message || err)); }
+        try {
+          const TOTAL_ADS = 4; // Cada vídeo = 4 anúncios
+          for (let i = 0; i < TOTAL_ADS; i++) {
+            await abrirSequenciaAnuncios(); // Função do app.js
+          }
+          alert(`+500 AOA creditados pelo vídeo!`);
+          await carregarPainel(); // Atualiza saldo
+        } catch (err) {
+          console.error("Erro ao assistir anúncios:", err);
+          alert('Erro ao assistir os anúncios. Tente novamente.');
+        }
       });
 
       // Compartilhar link
       document.getElementById('btn-compartilhar')?.addEventListener('click', async () => {
         try {
           const perfil = await obterUsuario();
-          if(!perfil) return alert('Você precisa estar logado para compartilhar.');
+          if (!perfil) return alert('Você precisa estar logado para compartilhar.');
 
           const link = `${window.location.origin}/?ref=${perfil.id}`;
           const link_id = `ref-${perfil.id}-${Date.now()}`;
-          const slogan = 'Ganhe Kwanzas assistindo vídeos no GanhaPlus!';
+          const slogan = '🔥 GANHA 500 AOA com GanhaPlus! 🔥';
+          const fullText = `${slogan}\nConfira: ${link}`;
 
-          // Copiar link + slogan
-          await navigator.clipboard.writeText(`${slogan} Visite: ${link}`);
-          alert('Link copiado! Compartilhe para ganhar quando alguém clicar.');
+          // Copiar link para área de transferência
+          await navigator.clipboard.writeText(fullText);
 
           // Registrar no backend
-          const { ok, dados } = await requestSeguro(`${BASE_URL}/api/compartilhar`,{
+          const { ok, dados } = await requestSeguro(`${BASE_URL}/api/compartilhar`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               "Authorization": "Bearer " + localStorage.getItem('gp_token')
             },
-            body: JSON.stringify({ link_id, plataforma: "WhatsApp" })
+            body: JSON.stringify({ link_id, plataforma: "Genérico" })
           });
 
-          if(!ok) return alert(dados?.erro || "Erro ao registrar compartilhamento");
+          if (!ok) return alert(dados?.erro || "Erro ao registrar compartilhamento");
 
-        } catch(err) {
-          console.error('Erro ao compartilhar link:', err);
-          alert('Não foi possível copiar ou registrar o compartilhamento: ' + (err?.message || err));
+          // Pergunta se deseja abrir redes sociais
+          const abrirRedes = confirm('Deseja compartilhar agora em redes sociais?');
+          if (abrirRedes) {
+            const urlFacebook = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`;
+            const urlTwitter = `https://twitter.com/intent/tweet?text=${encodeURIComponent(fullText)}`;
+            const urlWhatsApp = `https://wa.me/?text=${encodeURIComponent(fullText)}`;
+
+            window.open(urlFacebook, '_blank');
+            window.open(urlTwitter, '_blank');
+            window.open(urlWhatsApp, '_blank');
+          }
+
+          alert('Link copiado e registrado com sucesso! Compartilhe para ganhar 500 AOA.');
+
+        } catch (err) {
+          console.error("Erro ao compartilhar:", err);
+          alert('Não foi possível gerar ou registrar o link. Tente novamente.');
         }
       });
 
