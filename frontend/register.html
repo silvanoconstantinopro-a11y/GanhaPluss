@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <title>GanhaPlus — Registar</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="login.css">
+</head>
+<body class="theme-dark auth-page">
+
+  <div class="auth-container">
+    <div class="auth-header">
+      <h1 class="brand">GanhaPlus</h1>
+      <p class="subtitle">Ganhe Kwanzas assistindo e compartilhando!</p>
+    </div>
+
+    <div id="mensagem" class="mensagem"></div>
+
+    <section class="auth-card">
+      <h2>Criar Conta</h2>
+
+      <div class="input-group">
+        <label for="reg-telefone">Telefone</label>
+        <input id="reg-telefone" type="text" placeholder="Digite seu número">
+      </div>
+
+      <div class="input-group">
+        <label for="reg-senha">Senha</label>
+        <input id="reg-senha" type="password" placeholder="Crie uma senha">
+      </div>
+
+      <div class="input-group">
+        <label for="reg-idade">Idade</label>
+        <input id="reg-idade" type="number" placeholder="18+">
+      </div>
+
+      <button id="btn-registar" class="btn-primary">Registar</button>
+
+      <p class="switch-page">Já tem conta? <a href="login.html">Entrar</a></p>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

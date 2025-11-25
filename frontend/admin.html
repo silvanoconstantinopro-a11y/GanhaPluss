@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <title>GanhaPlus — Painel Administrativo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Fonte moderna -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="admin.css">
+
+
+</head>
+
+<body>
+  <aside class="sidebar">
+    <div class="logo">
+      <h2>GanhaPlus</h2>
+      <span>Painel Admin</span>
+    </div>
+
+    <nav class="menu">
+      <a href="#saques" class="active">📤 Saques</a>
+      <a href="#usuarios">👥 Usuários</a>
+      <a href="#" id="logout">🔒 Sair</a>
+    </nav>
+  </aside>
+
+  <main class="main-admin">
+
+    <header class="topbar">
+      <div class="top-info">
+        <h1>Painel Administrativo</h1>
+        <p>Gerencie os saques e os usuários do sistema</p>
+      </div>
+      <div class="admin-tag">Admin</div>
+    </header>
+
+    <section id="saques" class="section-block">
+      <h2>Solicitações de Saque</h2>
+      <p class="section-desc">Aprovar ou marcar pagamentos realizados.</p>
+      <div id="admin-saques" class="grid-list"></div>
+    </section>
+
+    <section id="usuarios" class="section-block">
+      <h2>Usuários</h2>
+      <p class="section-desc">Lista de contas e saldos.</p>
+      <div id="admin-usuarios" class="grid-list"></div>
+    </section>
+
+  </main>
+
+  <div id="toast-container"></div>
+
+  <script src="admin.js"></script>
+  <script>
+    document.getElementById('logout').onclick = () => {
+      location.reload(); // Admin Secret temporário será descartado
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <title>GanhaPlus — Tarefas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Fonte moderna -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- CSS global -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="theme-dark dashboard-page">
+
+  <!-- Botão hambúrguer -->
+  <button id="toggle-sidebar" class="btn-hamburger" aria-label="Menu">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2 class="brand">GanhaPlus</h2>
+      <span class="tag">Menu</span>
+    </div>
+    <nav class="menu">
+      <a href="principal.html">🏠 Painel</a>
+      <a class="active" href="tarefa.html">🎯 Tarefas</a>
+      <a href="historico.html">📜 Histórico</a>
+      <a href="saque.html">💸 Saque</a>
+    </nav>
+    <button id="btn-logout" class="logout-btn">Sair</button>
+  </aside>
+
+  <!-- Conteúdo principal -->
+  <main class="main-content">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <h1>Tarefas Disponíveis</h1>
+      <p class="subtitle">Assista vídeos e compartilhe links para ganhar Kwanzas</p>
+      <p id="limite-anuncios" class="limite-info">
+        Você pode assistir <b>20 vídeos a cada 8 horas</b>.
+      </p>
+    </header>
+
+    <!-- Seção de Tarefas -->
+    <section class="section-block">
+      <h2 class="section-title">Ações</h2>
+      <div class="tarefas-row">
+        <!-- Assistir vídeo -->
+        <div class="tarefa-card">
+          <h3>Assistir Vídeos</h3>
+          <p>+700 AOA por cada 4 vídeos completos</p>
+          <button id="btn-assistir" class="btn-primary">Assistir Vídeo</button>
+        </div>
+
+        <!-- Compartilhar link -->
+        <div class="tarefa-card">
+          <h3>Compartilhar Link</h3>
+          <p>Compartilhe e ganhe 700 AOA</p>
+          <button id="btn-compartilhar" class="btn-primary">Compartilhar</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Script principal -->
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+      // Toggle Sidebar
+      const toggleBtn = document.getElementById("toggle-sidebar");
+      const sidebar = document.querySelector(".sidebar");
+      toggleBtn.addEventListener("click", () => {
+        sidebar.classList.toggle("sidebar-hidden");
+        toggleBtn.classList.toggle("active");
+      });
+
+      // Logout
+      document.getElementById('btn-logout')?.addEventListener('click', () => {
+        localStorage.removeItem('gp_token');
+        window.location.href = 'login.html';
+      });
+
+      // Assistir 4 vídeos consecutivos
+      document.getElementById('btn-assistir')?.addEventListener('click', async () => {
+        try { await abrirSequenciaVideos(); }
+        catch (err) { alert('Erro ao assistir os vídeos: ' + (err?.message || err)); }
+      });
+
+      // Compartilhar link
+      document.getElementById('btn-compartilhar')?.addEventListener('click', async () => {
+        try {
+          const perfil = await obterUsuario();
+          if(!perfil) return alert('Você precisa estar logado para compartilhar.');
+
+          const link = `${window.location.origin}/?ref=${perfil.id}`;
+          const link_id = `ref-${perfil.id}-${Date.now()}`;
+          const slogan = 'Ganhe Kwanzas assistindo vídeos no GanhaPlus!';
+
+          // Copiar link + slogan
+          await navigator.clipboard.writeText(`${slogan} Visite: ${link}`);
+          alert('Link copiado! Compartilhe para ganhar quando alguém clicar.');
+
+          // Registrar no backend
+          const { ok, dados } = await requestSeguro(`${BASE_URL}/api/compartilhar`,{
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": "Bearer " + localStorage.getItem('gp_token')
+            },
+            body: JSON.stringify({ link_id, plataforma: "WhatsApp" })
+          });
+
+          if(!ok) return alert(dados?.erro || "Erro ao registrar compartilhamento");
+
+        } catch(err) {
+          console.error('Erro ao compartilhar link:', err);
+          alert('Não foi possível copiar ou registrar o compartilhamento: ' + (err?.message || err));
+        }
+      });
+
+    });
+  </script>
+</body>
+</html>

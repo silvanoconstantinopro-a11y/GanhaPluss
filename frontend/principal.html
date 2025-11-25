@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8">
+  <title>GanhaPlus — Painel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Fonte moderna -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Estilos globais -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="theme-dark dashboard-page">
+
+  <!-- Botão hambúrguer FIXO -->
+  <button id="toggle-sidebar" class="btn-hamburger" aria-label="Menu">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2 class="brand">GanhaPlus</h2>
+      <span class="tag">Menu</span>
+    </div>
+
+    <nav class="menu">
+      <a class="active" href="principal.html">🏠 Painel</a>
+      <a href="tarefa.html">🎯 Tarefas</a>
+      <a href="historico.html">📜 Histórico</a>
+      <a href="saque.html">💸 Saque</a>
+    </nav>
+
+    <button id="btn-logout" class="logout-btn">Sair</button>
+  </aside>
+
+  <!-- Conteúdo principal -->
+  <main class="main-content">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <h1>Painel</h1>
+      <div class="saldo-card">
+        <div class="saldo-label">Saldo Atual</div>
+        <div id="saldo-valor" class="saldo-valor">0 AOA</div>
+      </div>
+    </header>
+
+    <!-- Seção de Tarefas -->
+    <section class="section-block">
+      <h2 class="section-title">Tarefas Rápidas</h2>
+      <p class="subtitle">Ganhe Kwanzas completando tarefas simples</p>
+
+      <div class="tarefas-row">
+        <!-- Assistir Vídeos -->
+        <div class="tarefa-card">
+          <h3>Assistir Vídeos</h3>
+          <p>+700 AOA por vídeo completo</p>
+          <button id="fazer-video" class="btn-primary">Assistir</button>
+        </div>
+
+        <!-- Compartilhar Link -->
+        <div class="tarefa-card">
+          <h3>Compartilhar Link</h3>
+          <p>+700 AOA por compartilhamento</p>
+          <button id="fazer-compartilhar" class="btn-primary">Compartilhar</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Script principal -->
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+      // Logout
+      document.getElementById('btn-logout')?.addEventListener('click', () => {
+        localStorage.removeItem('gp_token');
+        window.location.href = 'login.html';
+      });
+
+      // Carregar saldo automaticamente
+      if (typeof carregarPainel === 'function') carregarPainel();
+
+      // Assistir vídeos
+      document.getElementById('fazer-video')?.addEventListener('click', async () => {
+        try { await abrirSequenciaVideos(); }
+        catch (err) { alert('Erro ao assistir vídeos: ' + (err?.message || err)); }
+      });
+
+      // Compartilhar link
+      document.getElementById('fazer-compartilhar')?.addEventListener('click', async () => {
+        try { await compartilhar(); }
+        catch (err) { alert('Erro ao compartilhar link: ' + (err?.message || err)); }
+      });
+
+      // Toggle sidebar
+      const toggleBtn = document.getElementById('toggle-sidebar');
+      const sidebar = document.querySelector('.sidebar');
+      toggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('sidebar-hidden');
+        toggleBtn.classList.toggle('active');
+      });
+    });
+  </script>
+
+</body>
+</html>
