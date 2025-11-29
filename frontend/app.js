@@ -1,334 +1,295 @@
-/**
- * ===========================================================
- *      GANHAPLUS - FRONTEND PROFISSIONAL v7.0 (SEGURANÇA OTIMIZADA)
- * ===========================================================
- */
+// ================================
+// APP.JS — GanhaPlus Pro Max v6.2
+// ================================
 
-const BASE_URL = "http://localhost:4000";
+// CONFIGURAÇÕES
+const BASE_URL = "https://ganhaplus.onrender.com"; // Se o frontend estiver servido pelo mesmo server.js
 const TOKEN_KEY = "gp_token";
+const REWARD_AD = 500;      // Ganho total por 4 anúncios
+const REWARD_SHARE = 250;   // Ganho por compartilhamento
+const MAX_ADS_PER_SEQUENCE = 4;
+const REQUEST_TIMEOUT_MS = 15000;
 
-const RECOMPENSA_ANUNCIO = 500;
-const MAX_ADS = 4;
+// ------------------ TOASTS ------------------
+function ensureToastContainer() {
+  let c = document.getElementById("gp-toast-container");
+  if (!c) {
+    c = document.createElement("div");
+    c.id = "gp-toast-container";
+    c.style.position = "fixed";
+    c.style.top = "16px";
+    c.style.right = "16px";
+    c.style.zIndex = "999999";
+    c.style.display = "flex";
+    c.style.flexDirection = "column";
+    c.style.gap = "8px";
+    document.body.appendChild(c);
+  }
+  return c;
+}
 
-/* ===========================================================
-   TOKEN E AUTENTICAÇÃO
-=========================================================== */
-const salvarToken = t => localStorage.setItem(TOKEN_KEY, t);
-const obterToken = () => localStorage.getItem(TOKEN_KEY);
-const sair = () => { localStorage.removeItem(TOKEN_KEY); window.location.href = "login.html"; };
+function showToast(msg, { type = "info", duration = 4000 } = {}) {
+  const c = ensureToastContainer();
+  const el = document.createElement("div");
+  el.textContent = msg;
+  el.style.padding = "10px 14px";
+  el.style.borderRadius = "8px";
+  el.style.background = type === "error" ? "#ffe5e5" : type === "success" ? "#e5fff2" : "#e9f0ff";
+  el.style.boxShadow = "0 6px 18px rgba(0,0,0,0.12)";
+  el.style.opacity = "1";
+  el.style.transition = "opacity 0.25s";
+  c.appendChild(el);
+  setTimeout(() => { el.style.opacity = "0"; setTimeout(() => el.remove(), 260); }, duration);
+}
 
-const parseJwt = t => {
-    try { return JSON.parse(atob(t.split(".")[1])); }
-    catch { return null; }
-};
+// ------------------ TOKEN ------------------
+function salvarToken(token) { localStorage.setItem(TOKEN_KEY, token); }
+function obterToken() { return localStorage.getItem(TOKEN_KEY); }
+function limparToken() { localStorage.removeItem(TOKEN_KEY); }
+
+function parseJwt(t) {
+  try { return JSON.parse(atob(t.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))); } catch { return null; }
+}
+
+function tokenValido(t) {
+  const p = parseJwt(t);
+  return p?.exp && p.exp > Date.now() / 1000;
+}
 
 async function obterUsuario() {
-    const token = obterToken();
-    if (!token) return sair();
-    const payload = parseJwt(token);
-    if (!payload?.id) return sair();
-    return payload;
+  const t = obterToken();
+  if (!t || !tokenValido(t)) { limparToken(); return null; }
+  return parseJwt(t);
 }
 
-/* ===========================================================
-   FETCH SEGURO
-=========================================================== */
-async function requestSeguro(url, options = {}) {
-    try {
-        const r = await fetch(url, options);
-        const txt = await r.text();
-        let dados;
-        try { dados = txt ? JSON.parse(txt) : {}; }
-        catch { dados = { raw: txt }; }
-        return { ok: r.ok, status: r.status, dados };
-    } catch {
-        return { ok: false, status: 0, dados: { erro: "Erro de conexão" } };
+// ------------------ REQUEST SEGURO ------------------
+async function requestSeguro(path, opts = {}) {
+  const url = path.startsWith("http") ? path : BASE_URL + path;
+  const token = obterToken();
+  const headers = opts.headers || {};
+  if (!headers["Content-Type"] && !(opts.body instanceof FormData)) headers["Content-Type"] = "application/json";
+  if (token) headers["Authorization"] = "Bearer " + token;
+
+  const ctrl = new AbortController();
+  const tout = setTimeout(() => ctrl.abort(), REQUEST_TIMEOUT_MS);
+
+  try {
+    const res = await fetch(url, { ...opts, headers, signal: ctrl.signal });
+    clearTimeout(tout);
+    const txt = await res.text();
+    let dados = {};
+    try { dados = txt ? JSON.parse(txt) : {}; } catch {}
+
+    if ((res.status === 401 || res.status === 403) && token) {
+      limparToken();
+      showToast("Sessão expirada.", { type: "error" });
     }
+    return { ok: res.ok, status: res.status, dados };
+  } catch {
+    clearTimeout(tout);
+    return { ok: false, status: 0, dados: { erro: "Falha de conexão" } };
+  }
 }
 
-/* ===========================================================
-   LOGIN
-=========================================================== */
+// ------------------ BOTÕES ------------------
+function disableBtn(btn, txt = "Aguarde...") { if (!btn) return; btn._old = btn.innerHTML; btn.disabled = true; btn.innerHTML = txt; }
+function enableBtn(btn) { if (!btn) return; btn.disabled = false; if (btn._old) btn.innerHTML = btn._old; }
+
+// ------------------ LOGIN ------------------
 async function login() {
-    const telefone = document.getElementById("login-telefone").value.trim();
-    const senha = document.getElementById("login-senha").value;
-    const msg = document.getElementById("mensagem");
+  const tel = document.getElementById("login-telefone")?.value?.trim();
+  const sen = document.getElementById("login-senha")?.value;
+  if (!tel || !sen) return showToast("Preencha todos campos", { type: "error" });
 
-    if (!telefone || !senha) return msg.textContent = "Preencha todos os campos!";
+  const btn = document.getElementById("btn-login");
+  disableBtn(btn);
 
-    const { ok, dados } = await requestSeguro(`${BASE_URL}/api/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ telefone, senha })
-    });
+  const { ok, dados } = await requestSeguro("/api/login", {
+    method: "POST", body: JSON.stringify({ telefone: tel, senha: sen })
+  });
 
-    if (!ok) return msg.textContent = dados?.erro || "Erro no login";
+  enableBtn(btn);
 
-    salvarToken(dados.token);
-    window.location.href = "principal.html";
+  if (!ok || !dados.token) return showToast(dados?.erro || "Login falhou", { type: "error" });
+
+  salvarToken(dados.token);
+  showToast("Login OK", { type: "success" });
+  location.href = "principal.html";
 }
 
-/* ===========================================================
-   REGISTO
-=========================================================== */
+// ------------------ REGISTRO ------------------
 async function registrar() {
-    const telefone = document.getElementById("reg-telefone").value.trim();
-    const senha = document.getElementById("reg-senha").value;
-    const idade = Number(document.getElementById("reg-idade").value);
-    const msg = document.getElementById("mensagem");
+  const tel = document.getElementById("reg-telefone")?.value?.trim();
+  const sen = document.getElementById("reg-senha")?.value;
+  const idade = Number(document.getElementById("reg-idade")?.value);
+  if (!tel || !sen || !idade) return showToast("Preencha tudo", { type: "error" });
+  if (idade < 18) return showToast("Apenas maiores de 18", { type: "error" });
 
-    if (!telefone || !senha || !idade) return msg.textContent = "Preencha todos os campos!";
-    if (idade < 18) return msg.textContent = "Apenas maiores de 18 anos!";
+  const btn = document.getElementById("btn-registar");
+  disableBtn(btn);
 
-    const { ok, dados } = await requestSeguro(`${BASE_URL}/api/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ telefone, senha, idade })
-    });
+  const { ok, dados } = await requestSeguro("/api/register", {
+    method: "POST", body: JSON.stringify({ telefone: tel, senha: sen, idade })
+  });
 
-    if (!ok) return msg.textContent = dados?.erro || "Erro no registo";
+  enableBtn(btn);
 
-    salvarToken(dados.token);
-    window.location.href = "principal.html";
+  if (!ok || !dados.token) return showToast(dados?.erro || "Erro", { type: "error" });
+
+  salvarToken(dados.token);
+  showToast("Registado!", { type: "success" });
+  location.href = "principal.html";
 }
 
-/* ===========================================================
-   PAINEL
-=========================================================== */
+// ------------------ PAINEL ------------------
 async function carregarPainel() {
-    try {
-        const perfil = await obterUsuario();
-        const token = obterToken();
-        const { ok, dados } = await requestSeguro(`${BASE_URL}/api/saldo/${perfil.id}`, {
-            headers: { "Authorization": "Bearer " + token }
-        });
-        if (ok) document.getElementById("saldo-valor").textContent = `${dados.saldo} AOA`;
+  const u = await obterUsuario();
+  if (!u) return sair(false);
 
-        document.getElementById("fazer-anuncio")?.addEventListener("click", abrirSequenciaAnuncios);
-        document.getElementById("fazer-compartilhar")?.addEventListener("click", compartilhar);
-    } catch (err) {
-        console.error("Erro ao carregar painel:", err);
-        alert("Erro ao carregar o painel. Faça login novamente.");
-        sair();
-    }
+  const { ok, dados } = await requestSeguro(`/api/saldo/${u.id}`);
+  if (!ok) return showToast("Erro saldo", { type: "error" });
+
+  document.getElementById("saldo-valor").textContent = (dados.saldo || 0) + " AOA";
+
+  const btnA = document.getElementById("btn-assistir");
+  if (btnA && !btnA.dataset.bound) { btnA.dataset.bound = 1; btnA.addEventListener("click", () => abrirSequenciaAnuncios(btnA)); }
+
+  const btnC = document.getElementById("btn-compartilhar");
+  if (btnC && !btnC.dataset.bound) { btnC.dataset.bound = 1; btnC.addEventListener("click", () => compartilhar(btnC)); }
 }
 
-/* ===========================================================
-   SISTEMA DE ANÚNCIOS (GOOGLE IMA)
-=========================================================== */
-const AD_TAGS = [
-    "https://pubads.g.doubleclick.net/gampad/ads?...1",
-    "https://pubads.g.doubleclick.net/gampad/ads?...2",
-    "https://pubads.g.doubleclick.net/gampad/ads?...3"
-];
+// ------------------ ANÚNCIOS SEGUROS ------------------
+async function abrirSequenciaAnuncios(btn) {
+  disableBtn(btn, "Carregando anúncios...");
+  const u = await obterUsuario();
+  if (!u) return sair();
 
-const escolherTag = () => AD_TAGS[Math.floor(Math.random() * AD_TAGS.length)];
+  // Inicializa sequência de anúncios no backend
+  const { ok, dados } = await requestSeguro(`/api/tarefa/anuncio/init`, {
+    method: "POST",
+    body: JSON.stringify({ userId: u.id })
+  });
 
-function carregarIMA() {
-    return new Promise((resolve, reject) => {
-        if (window.google?.ima) return resolve();
-        const s = document.createElement("script");
-        s.src = "https://imasdk.googleapis.com/js/sdkloader/ima3.js";
-        s.onload = () => setTimeout(() => window.google?.ima ? resolve() : reject("IMA não carregou"), 500);
-        s.onerror = () => reject("Erro ao carregar script IMA");
-        document.head.appendChild(s);
-    });
+  if (!ok || !dados?.anuncios || !dados.anuncios.length) {
+    showToast("Os anúncios não estão disponíveis. Tente mais tarde.", { type: "error" });
+    enableBtn(btn);
+    return;
+  }
+
+  showToast("Anúncios carregados! Assista todos para receber a recompensa.", { type: "info" });
+
+  // Recompensa só é creditada após o backend confirmar que todos os anúncios foram assistidos
+  // O backend deve validar tempo de visualização real de cada anúncio
+  enableBtn(btn);
 }
 
-async function abrirSequenciaAnuncios() {
-    try {
-        for (let i = 0; i < MAX_ADS; i++) {
-            await executarAnuncio();
-        }
-        alert(`+${RECOMPENSA_ANUNCIO} AOA creditados!`);
-        carregarPainel();
-    } catch (err) {
-        console.error("Erro na sequência de anúncios:", err);
-        alert("Erro ao carregar anúncios. Tente novamente mais tarde.");
-    }
+// ------------------ COMPARTILHAR SEGURO ------------------
+async function compartilhar(btn) {
+  const u = await obterUsuario();
+  if (!u) return sair();
+
+  // Solicita link de compartilhamento
+  const { ok, dados } = await requestSeguro("/api/compartilhar/init", {
+    method: "POST",
+    body: JSON.stringify({ userId: u.id })
+  });
+
+  if (!ok || !dados?.link_id) {
+    showToast("Não foi possível gerar link de compartilhamento.", { type: "error" });
+    return;
+  }
+
+  showToast("Link de compartilhamento gerado. Recompensa só será creditada após alguém clicar.", { type: "info" });
 }
 
-async function executarAnuncio() {
-    const tag = escolherTag();
-    await carregarIMA();
-    return tocarAnuncio(tag);
-}
-
-function tocarAnuncio(tag) {
-    return new Promise((resolve, reject) => {
-        const fundo = document.createElement("div");
-        fundo.style = "position:fixed; inset:0; background:#000a; display:flex; justify-content:center; align-items:center; z-index:9999;";
-        document.body.appendChild(fundo);
-
-        const player = document.createElement("div");
-        player.style = "width:90%; max-width:900px; height:70vh; background:#000;";
-        fundo.appendChild(player);
-
-        const fakeVideo = document.createElement("video");
-        const display = new google.ima.AdDisplayContainer(player, fakeVideo);
-        display.initialize();
-
-        const loader = new google.ima.AdsLoader(display);
-        const req = new google.ima.AdsRequest();
-        req.adTagUrl = tag;
-        req.linearAdSlotWidth = 900;
-        req.linearAdSlotHeight = 600;
-
-        loader.addEventListener(google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED, e => {
-            const manager = e.getAdsManager(fakeVideo);
-            manager.addEventListener(google.ima.AdEvent.Type.COMPLETE, () => {
-                fundo.remove();
-                creditar(RECOMPENSA_ANUNCIO, tag);
-                resolve();
-            });
-            try { manager.init(900, 600, google.ima.ViewMode.NORMAL); manager.start(); }
-            catch { fundo.remove(); reject("Erro ao iniciar anúncio"); }
-        });
-
-        loader.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, e => {
-            fundo.remove();
-            reject(e);
-        });
-
-        loader.requestAds(req);
-
-        setTimeout(() => { if (document.body.contains(fundo)) fundo.remove(); reject("timeout"); }, 30000);
-    });
-}
-
-/* ===========================================================
-   CREDITAR RECOMPENSA
-=========================================================== */
-async function creditar(valor, ad_id) {
-    try {
-        const token = obterToken();
-        const perfil = await obterUsuario();
-        const { ok } = await requestSeguro(`${BASE_URL}/api/tarefa`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + token
-            },
-            body: JSON.stringify({
-                tipo: "anuncio",
-                descricao: `Assistiu anúncio ${ad_id}`,
-                valor,
-                anuncio_id: ad_id
-            })
-        });
-        if (ok) carregarPainel();
-    } catch (err) {
-        console.error("Erro ao creditar:", err);
-    }
-}
-
-/* ===========================================================
-   COMPARTILHAR
-=========================================================== */
-async function compartilhar() {
-    try {
-        const perfil = await obterUsuario();
-        const token = obterToken();
-
-        const link = `${window.location.origin}/?ref=${perfil.id}`;
-        const link_id = `ref-${perfil.id}-${Date.now()}`;
-        const texto = `🔥 GANHA PLUS 🔥\nGanhe 500 AOA assistindo vídeos!\n${link}`;
-
-        await navigator.clipboard.writeText(texto);
-        alert("Link copiado! Compartilhe em qualquer rede social.");
-
-        await requestSeguro(`${BASE_URL}/api/compartilhar`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + token
-            },
-            body: JSON.stringify({ link_id, plataforma: "Genérico" })
-        });
-
-        // Abrir opções de compartilhamento
-        const facebook = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`;
-        const twitter = `https://twitter.com/intent/tweet?text=${encodeURIComponent(texto)}`;
-        const whatsapp = `https://wa.me/?text=${encodeURIComponent(texto)}`;
-
-        const abrirRedes = confirm("Deseja compartilhar agora em redes sociais?");
-        if (abrirRedes) { window.open(facebook, "_blank"); window.open(twitter, "_blank"); window.open(whatsapp, "_blank"); }
-
-    } catch (err) {
-        console.error("Erro ao compartilhar:", err);
-        alert("Não foi possível gerar ou compartilhar o link.");
-    }
-}
-
-/* ===========================================================
-   HISTÓRICO
-=========================================================== */
+// ------------------ HISTÓRICO ------------------
 async function carregarHistorico() {
-    try {
-        const perfil = await obterUsuario();
-        const token = obterToken();
-        const { ok, dados } = await requestSeguro(`${BASE_URL}/api/historico/${perfil.id}`, {
-            headers: { "Authorization": "Bearer " + token }
-        });
-        if (!ok) return;
+  const u = await obterUsuario();
+  if (!u) return;
 
-        const lista = document.getElementById("historico-lista");
-        lista.innerHTML = dados.historico.map(h => `
-            <div class="card">
-                <strong>${h.tipo}</strong> — ${h.descricao}
-                <span style="float:right">${h.valor} AOA</span>
-                <br><small>${h.criado_em}</small>
-            </div>
-        `).join("");
-    } catch (err) {
-        console.error("Erro ao carregar histórico:", err);
-    }
+  const { ok, dados } = await requestSeguro(`/api/historico/${u.id}`);
+  if (!ok) return showToast("Erro ao carregar histórico", { type: "error" });
+
+  const list = document.getElementById("historico-lista");
+  if (!list) return;
+
+  list.innerHTML = (dados.historico || []).map(h => `
+    <div class="card historico-item">
+      <strong>${h.tipo}</strong> - ${h.valor} AOA<br>
+      <small>${h.descricao}</small>
+    </div>
+  `).join("");
 }
 
-/* ===========================================================
-   SAQUE
-=========================================================== */
-async function carregarSaque() {
-    document.getElementById("btn-withdraw")?.addEventListener("click", async () => {
-        try {
-            const valor = Number(document.getElementById("withdraw-valor").value);
-            const numero = document.getElementById("withdraw-express").value;
-            const msg = document.getElementById("withdraw-msg");
+// ------------------ SAQUE ------------------
+function configurarSaque() {
+  const btn = document.getElementById("btn-withdraw");
+  if (!btn || btn.dataset.bound) return;
+  btn.dataset.bound = 1;
 
-            const perfil = await obterUsuario();
-            const token = obterToken();
+  btn.addEventListener("click", async () => {
+    const valor = Number(document.getElementById("withdraw-valor")?.value);
+    const numero = document.getElementById("withdraw-express")?.value?.trim();
+    if (!valor || !numero) return showToast("Preencha tudo", { type: "error" });
 
-            const { ok, dados } = await requestSeguro(`${BASE_URL}/api/withdraw`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
-                body: JSON.stringify({ valor, numero_express: numero })
-            });
-
-            msg.style.color = ok ? "green" : "red";
-            msg.textContent = ok ? dados.mensagem : dados.erro;
-            if (ok) carregarPainel();
-        } catch (err) {
-            console.error("Erro no saque:", err);
-            alert("Erro ao solicitar saque. Tente novamente.");
-        }
+    disableBtn(btn);
+    const { ok, dados } = await requestSeguro("/api/withdraw", {
+      method: "POST",
+      body: JSON.stringify({ valor, numero_express: numero })
     });
+    enableBtn(btn);
+
+    showToast(ok ? "Pedido de saque enviado" : dados?.erro || "Erro", { type: ok ? "success" : "error" });
+    if (ok) carregarPainel();
+  });
 }
 
-/* ===========================================================
-   INICIALIZAÇÃO
-=========================================================== */
+// ------------------ LOGOUT ------------------
+function sair(redir = true) {
+  limparToken();
+  if (redir) location.href = "login.html";
+}
+
+// ------------------ INIT ------------------
 document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("btn-login")?.addEventListener("click", login);
-    document.getElementById("btn-registar")?.addEventListener("click", registrar);
-    document.getElementById("btn-logout")?.addEventListener("click", sair);
 
-    const path = window.location.pathname;
-    if (path.endsWith("principal.html")) carregarPainel();
-    if (path.endsWith("Historico.html")) carregarHistorico();
-    if (path.endsWith("saque.html")) carregarSaque();
+  /* --- MENU LATERAL --- */
+  const sidebar = document.getElementById("sidebar");
+  const toggleBtn = document.getElementById("toggle-sidebar");
+  toggleBtn?.addEventListener("click", () => sidebar.classList.toggle("sidebar-hidden"));
+
+  /* --- LOGOUT (2 botões sincronizados) --- */
+  const logoutNow = () => { localStorage.removeItem("gp_token"); window.location.href = "login.html"; };
+  document.getElementById("btn-logout")?.addEventListener("click", logoutNow);
+  document.getElementById("btn-logout-2")?.addEventListener("click", logoutNow);
+
+  /* --- ASSISTIR ANÚNCIOS --- */
+  const assistirBtn = document.getElementById("btn-assistir");
+  assistirBtn?.addEventListener("click", async () => {
+    if (typeof abrirSequenciaAnuncios !== "function") {
+      showToast("Erro: sistema de anúncios não carregou.", { type: "error" });
+      return;
+    }
+    disableBtn(assistirBtn, "Carregando anúncios...");
+    try { await abrirSequenciaAnuncios(assistirBtn); carregarPainel?.(); carregarHistorico?.(); }
+    catch { showToast("Não foi possível exibir anúncios. Tente novamente.", { type: "error" }); }
+    finally { enableBtn(assistirBtn); }
+  });
+
+  /* --- COMPARTILHAR --- */
+  const compartilharBtn = document.getElementById("btn-compartilhar");
+  compartilharBtn?.addEventListener("click", async () => {
+    if (typeof compartilhar !== "function") { showToast("Faça login para partilhar.", { type: "error" }); return; }
+    disableBtn(compartilharBtn, "Registrando...");
+    try { await compartilhar(compartilharBtn); carregarPainel?.(); carregarHistorico?.(); }
+    catch { showToast("Não foi possível registrar a partilha.", { type: "error" }); }
+    finally { enableBtn(compartilharBtn); }
+  });
+
+  /* --- LOGIN / REGISTRO / SAQUE --- */
+  document.getElementById("btn-login")?.addEventListener("click", login);
+  document.getElementById("btn-registar")?.addEventListener("click", registrar);
+  if (location.pathname.split("/").pop() === "saque.html") { carregarPainel(); configurarSaque(); }
+  if (location.pathname.split("/").pop() === "historico.html") carregarHistorico();
+  if (location.pathname.split("/").pop() === "principal.html") carregarPainel();
 });
-window.abrirSequenciaAnuncios = abrirSequenciaAnuncios;
-window.obterUsuario = obterUsuario;
-window.carregarPainel = carregarPainel;
-window.requestSeguro = requestSeguro;
-

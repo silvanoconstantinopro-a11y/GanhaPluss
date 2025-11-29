@@ -4,16 +4,23 @@
   <meta charset="utf-8">
   <title>GanhaPlus — Entrar</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="login.css">
-</head>
 
+  <!-- Fonte moderna -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- CSS específico para autenticação -->
+  <link rel="stylesheet" href="login.css">
+
+  <style>
+   
+  </style>
+</head>
 <body class="theme-dark auth-page">
 
   <div class="auth-container">
     <div class="auth-header">
       <h1 class="brand">GanhaPlus</h1>
-      <p class="subtitle">Ganhe Kwanzas assistindo e compartilhando!</p>
+      <p class="subtitle">Ganhe Kwanzas assistindo vídeos e compartilhando links!</p>
     </div>
 
     <div id="mensagem" class="mensagem"></div>
@@ -23,7 +30,7 @@
 
       <div class="input-group">
         <label for="login-telefone">Telefone</label>
-        <input id="login-telefone" type="text" placeholder="Digite seu número">
+        <input id="login-telefone" type="text" placeholder="Ex: 923XXXXXX">
       </div>
 
       <div class="input-group">
@@ -38,5 +45,39 @@
   </div>
 
   <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const btnLogin = document.getElementById('btn-login');
+      const mensagem = document.getElementById('mensagem');
+
+      btnLogin?.addEventListener('click', async () => {
+        const telefone = document.getElementById('login-telefone').value.trim();
+        const senha = document.getElementById('login-senha').value.trim();
+
+        if(!telefone || !senha) {
+          mensagem.textContent = 'Preencha todos os campos!';
+          return;
+        }
+
+        try {
+          // Chamada à função de login do app.js
+          const resultado = await loginUsuario({ telefone, senha });
+          if(resultado.ok){
+            mensagem.style.color = '#0f0';
+            mensagem.textContent = 'Login efetuado com sucesso! Redirecionando...';
+            setTimeout(()=> window.location.href = 'principal.html', 1000);
+          } else {
+            mensagem.style.color = '#ff6';
+            mensagem.textContent = resultado.erro || 'Telefone ou senha incorretos.';
+          }
+        } catch(err) {
+          mensagem.style.color = '#ff6';
+          mensagem.textContent = 'Erro de conexão. Tente novamente.';
+          console.error(err);
+        }
+      });
+    });
+  </script>
+
 </body>
 </html>

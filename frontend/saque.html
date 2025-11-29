@@ -5,66 +5,97 @@
   <title>GanhaPlus — Saque</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
+  <!-- Fonte moderna -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Estilos globais -->
   <link rel="stylesheet" href="styles.css">
+
   <style>
-    .saque-card { border:1px solid #333; padding:10px; margin-bottom:10px; border-radius:8px; background:#111; color:#fff; }
-    .saque-status { font-weight:bold; }
-    .pendente { color:orange; }
-    .pago { color:lightgreen; }
-    .contador { font-size:0.9em; color:#ccc; }
-    .motivacao { margin-top:15px; font-style:italic; color:#aaa; }
+    .saque-card {
+      border: 1px solid #333;
+      padding: 12px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      background: #111;
+      color: #fff;
+    }
+    .saque-status { font-weight: bold; }
+    .pendente { color: orange; }
+    .pago { color: lightgreen; }
+    .contador { font-size: 0.9em; color: #ccc; margin-top: 6px; }
+    .motivacao { margin-top: 15px; font-style: italic; color: #aaa; }
+    .form-card label { display: block; margin-top: 10px; margin-bottom: 4px; }
+    .form-card input { width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #333; background: #222; color: #fff; }
+    .mensagem { margin-top: 10px; color: #0af; font-weight: bold; }
   </style>
 </head>
 
-<body class="theme-dark dashboard-page">
-  <button id="toggle-sidebar" class="btn-hamburger" aria-label="Menu">
+<body class="theme-dark dashboard-page" data-page="saque">
+
+  <!-- Botão hamburger -->
+  <button id="toggle-sidebar" class="btn-hamburger" aria-label="Abrir menu">
     <span></span><span></span><span></span>
   </button>
 
-  <aside class="sidebar">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <h2 class="brand">GanhaPlus</h2>
       <span class="tag">Menu</span>
     </div>
     <nav class="menu">
-      <a href="principal.html">🏠 Painel</a>
-      <a href="tarefa.html">🎯 Tarefas</a>
-      <a href="historico.html">📜 Histórico</a>
-      <a class="active" href="saque.html">💸 Saque</a>
+      <a href="principal.html" class="menu-item">🏠 Painel</a>
+      <a href="tarefa.html" class="menu-item">🎯 Tarefas</a>
+      <a href="historico.html" class="menu-item">📜 Histórico</a>
+      <a href="saque.html" class="menu-item active">💸 Saque</a>
     </nav>
-    <button id="btn-logout" class="logout-btn">Sair</button>
+    <div class="sidebar-footer">
+      <button id="btn-logout" class="logout-btn">Sair</button>
+      <small class="muted">Versão 7.0</small>
+    </div>
   </aside>
 
+  <!-- Conteúdo principal -->
   <main class="main-content">
+
+    <!-- Topbar -->
     <header class="topbar">
       <h1>Solicitar Saque</h1>
-      <p class="subtitle">Solicite seus Kwanzas de forma segura</p>
+      <p class="subtitle">Solicite seus Kwanzas de forma segura para o Express</p>
     </header>
 
+    <!-- Formulário de saque -->
     <section class="section-block form-card">
       <label for="withdraw-valor">Valor AOA</label>
-      <input id="withdraw-valor" type="number" placeholder="600000" min="600000" />
+      <input id="withdraw-valor" type="number" placeholder="600000" min="600000">
+
       <label for="withdraw-express">Número Express</label>
-      <input id="withdraw-express" type="text" placeholder="Número Express" />
+      <input id="withdraw-express" type="text" placeholder="Número Express">
+
       <button id="btn-withdraw" class="btn-primary">Solicitar Saque</button>
+
       <div id="withdraw-msg" class="mensagem"></div>
     </section>
 
+    <!-- Histórico de saques -->
     <section class="section-block">
       <h2 class="section-title">Histórico de Saques</h2>
       <div id="saques-list" class="history-list"></div>
-      <div class="motivacao">Continue completando tarefas para acumular para o próximo saque!</div>
+      <div class="motivacao">Continue completando tarefas e anúncios para acumular para o próximo saque!</div>
     </section>
+
   </main>
 
-  <script src="app.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', async () => {
+  <!-- Script principal -->
+  <script src="app.js" defer></script>
+  <script defer>
+    document.addEventListener('DOMContentLoaded', () => {
       const toggleBtn = document.getElementById('toggle-sidebar');
-      const sidebar = document.querySelector('.sidebar');
+      const sidebar = document.getElementById('sidebar');
 
-      toggleBtn.addEventListener('click', () => {
+      // Toggle sidebar
+      toggleBtn?.addEventListener('click', () => {
         sidebar.classList.toggle('sidebar-hidden');
         toggleBtn.classList.toggle('active');
       });
@@ -75,45 +106,11 @@
         window.location.href = 'login.html';
       });
 
-      // Inicializa saque
+      // Inicializar saque e histórico
       if (typeof carregarSaque === 'function') carregarSaque();
-
-      // Carrega histórico de saques
-      await carregarHistoricoSaque();
+      if (typeof carregarHistoricoSaquesComContador === 'function') carregarHistoricoSaquesComContador();
     });
-
-    async function carregarHistoricoSaque() {
-      try {
-        const perfil = await obterUsuario();
-        if (!perfil) return;
-
-        const { ok, dados } = await requestSeguro(`${BASE_URL}/api/historico/${perfil.id}`, {
-          headers: { "Authorization": "Bearer " + localStorage.getItem("gp_token") }
-        });
-
-        if (!ok) return console.error('Erro ao carregar histórico', dados);
-
-        const container = document.getElementById('saques-list');
-        container.innerHTML = '';
-
-        dados.historico
-          .filter(h => h.tipo === 'saque')
-          .forEach(h => {
-            const card = document.createElement('div');
-            card.className = 'saque-card';
-            const statusClass = h.valor < 0 ? 'pendente' : 'pago';
-            card.innerHTML = `
-              <div><strong>Valor:</strong> ${Math.abs(h.valor)} AOA</div>
-              <div><strong>Descrição:</strong> ${h.descricao}</div>
-              <div><strong>Data:</strong> ${new Date(h.criado_em).toLocaleString()}</div>
-              <div>Status: <span class="saque-status ${statusClass}">${statusClass.toUpperCase()}</span></div>
-            `;
-            container.appendChild(card);
-          });
-      } catch (err) {
-        console.error("Erro ao carregar histórico de saques:", err);
-      }
-    }
   </script>
+
 </body>
 </html>

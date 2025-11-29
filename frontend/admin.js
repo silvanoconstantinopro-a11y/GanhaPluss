@@ -4,8 +4,12 @@
  * ================================================
  */
 
+<<<<<<< HEAD
 const BASE_URL = 'https://ganhapluss-1.onrender.com';
 ;
+=======
+const BASE_URL = 'http://localhost:4000';
+>>>>>>> 8806085 (Primeiro commit)
 let ADMIN_SECRET = null; // não armazenar permanentemente
 
 // Solicita admin secret ao entrar

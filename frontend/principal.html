@@ -4,104 +4,176 @@
   <meta charset="utf-8">
   <title>GanhaPlus — Painel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+
+  <meta name="description" content="GanhaPlus — Painel de tarefas. Acompanhe o saldo, veja anúncios e compartilhe links para ganhar Kwanzas.">
 </head>
 
-<body class="theme-dark dashboard-page">
+<body class="theme-dark dashboard-page" data-page="principal">
 
-  <!-- Botão hambúrguer FIXO -->
-  <button id="toggle-sidebar" class="btn-hamburger" aria-label="Menu">
-    <span></span>
-    <span></span>
-    <span></span>
-  </button>
+  <!-- HEADER -->
+  <header class="site-header">
+    <button id="toggle-sidebar" class="btn-hamburger" aria-label="Abrir menu">
+      <span></span><span></span><span></span>
+    </button>
 
-  <!-- Sidebar -->
-  <aside class="sidebar">
+    <div class="header-title">
+      <h1>GanhaPlus</h1>
+    </div>
+
+    <div class="header-actions">
+      <div class="saldo">
+        <small>Saldo</small>
+        <div id="saldo-valor">0 AOA</div>
+      </div>
+      <button id="btn-logout" class="btn-ghost">Sair</button>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <h2 class="brand">GanhaPlus</h2>
       <span class="tag">Menu</span>
     </div>
 
     <nav class="menu">
-      <a class="active" href="principal.html">🏠 Painel</a>
-      <a href="tarefa.html">🎯 Tarefas</a>
-      <a href="historico.html">📜 Histórico</a>
-      <a href="saque.html">💸 Saque</a>
+      <a href="principal.html" class="menu-item active">🏠 Painel</a>
+      <a href="tarefa.html" class="menu-item">🎯 Tarefas</a>
+      <a href="historico.html" class="menu-item">📜 Histórico</a>
+      <a href="saque.html" class="menu-item">💸 Saque</a>
     </nav>
 
-    <button id="btn-logout" class="logout-btn">Sair</button>
+    <div class="sidebar-footer">
+      <button id="btn-logout-2" class="logout-btn">Sair</button>
+      <small class="muted">Versão 7.0</small>
+    </div>
   </aside>
 
-  <!-- Conteúdo principal -->
+  <!-- MAIN -->
   <main class="main-content">
-
-    <!-- Topbar -->
     <header class="topbar">
-      <h1>Painel</h1>
-      <div class="saldo-card">
-        <div class="saldo-label">Saldo Atual</div>
-        <div id="saldo-valor" class="saldo-valor">0 AOA</div>
-      </div>
+      <h2>Painel</h2>
+      <p class="subtitle">Acompanhe seu saldo e realize tarefas para ganhar Kwanzas</p>
     </header>
 
-    <!-- Seção de Tarefas -->
     <section class="section-block">
-      <h2 class="section-title">Tarefas Rápidas</h2>
+      <h3 class="section-title">Tarefas Rápidas</h3>
       <p class="subtitle">Ganhe Kwanzas completando tarefas simples</p>
 
-      <div class="tarefas-row">
-        <!-- Assistir Vídeos -->
-        <div class="tarefa-card">
-          <h3>Assistir Vídeos</h3>
-          <p>+500 AOA por vídeo (4 anúncios)</p>
-          <button id="btn-assistir" class="btn-primary">Assistir</button>
-        </div>
+      <div class="tarefas-grid">
 
-        <!-- Compartilhar Link -->
-        <div class="tarefa-card">
-          <h3>Compartilhar Link</h3>
-          <p>+500 AOA por compartilhamento</p>
-          <button id="btn-compartilhar" class="btn-primary">Compartilhar</button>
-        </div>
+        <!-- Assistir -->
+        <article class="tarefa-card">
+          <div class="tarefa-card-body">
+            <h4>Assistir Vídeos</h4>
+            <p>+500 AOA por anúncio (4 anúncios por vídeo)</p>
+          </div>
+          <div class="tarefa-card-actions">
+            <button id="btn-assistir" class="btn-primary">Assistir</button>
+          </div>
+        </article>
+
+        <!-- Compartilhar -->
+        <article class="tarefa-card">
+          <div class="tarefa-card-body">
+            <h4>Compartilhar Link</h4>
+            <p>+500 AOA por compartilhamento</p>
+          </div>
+          <div class="tarefa-card-actions">
+            <button id="btn-compartilhar" class="btn-primary">Compartilhar</button>
+          </div>
+        </article>
+
       </div>
     </section>
-
   </main>
 
-  <!-- Script principal -->
-  <script src="app.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
+  <!-- Scripts -->
+  <script src="app.js" defer></script>
 
-      // Logout
-      document.getElementById('btn-logout')?.addEventListener('click', () => {
-        localStorage.removeItem('gp_token');
-        window.location.href = 'login.html';
+  <script defer>
+    document.addEventListener("DOMContentLoaded", () => {
+
+      /* ====== SIDEBAR ====== */
+      const toggleBtn = document.getElementById("toggle-sidebar");
+      const sidebar = document.getElementById("sidebar");
+
+      toggleBtn?.addEventListener("click", () => {
+        sidebar.classList.toggle("sidebar-hidden");
+        toggleBtn.classList.toggle("active");
       });
 
-      // Carregar saldo automaticamente
-      if (typeof carregarPainel === 'function') carregarPainel();
+      /* ====== LOGOUT ====== */
+      const logout = () => {
+        localStorage.removeItem("gp_token");
+        window.location.href = "login.html";
+      };
 
-      // Assistir vídeos (chama a função correta do app.js)
-      document.getElementById('btn-assistir')?.addEventListener('click', async () => {
-        try { await abrirSequenciaAnuncios(); }
-        catch (err) { alert('Erro ao assistir vídeos: ' + (err?.message || err)); }
+      [document.getElementById("btn-logout"), document.getElementById("btn-logout-2")]
+        .forEach(btn => btn?.addEventListener("click", logout));
+
+      /* ====== VERIFICAR TOKEN ====== */
+      const token = localStorage.getItem("gp_token");
+      if (!token) return logout();
+
+      /* ====== CARREGAR SALDO ====== */
+      if (typeof carregarPainel === "function") carregarPainel();
+
+      /* ====== BOTÕES DE TAREFAS ====== */
+      const btnAssistir = document.getElementById("btn-assistir");
+      const btnCompartilhar = document.getElementById("btn-compartilhar");
+
+      /* ------- Assistir Vídeos ------- */
+      btnAssistir?.addEventListener("click", async () => {
+        if (btnAssistir.disabled) return;
+
+        btnAssistir.disabled = true;
+        btnAssistir.innerText = "Aguarde...";
+
+        try {
+          if (typeof abrirSequenciaAnuncios !== "function")
+            return alert("Erro interno: Função de anúncios não encontrada.");
+
+          const ok = await abrirSequenciaAnuncios();
+          if (!ok) alert("Não há anúncios disponíveis no momento.");
+
+          if (typeof carregarPainel === "function") carregarPainel();
+
+        } catch (err) {
+          console.error(err);
+          alert("Erro ao assistir anúncios. Tente novamente.");
+        }
+
+        btnAssistir.disabled = false;
+        btnAssistir.innerText = "Assistir";
       });
 
-      // Compartilhar link
-      document.getElementById('btn-compartilhar')?.addEventListener('click', async () => {
-        try { await compartilhar(); }
-        catch (err) { alert('Erro ao compartilhar link: ' + (err?.message || err)); }
-      });
+      /* ------- Compartilhar Link ------- */
+      btnCompartilhar?.addEventListener("click", async () => {
+        if (btnCompartilhar.disabled) return;
 
-      // Toggle sidebar
-      const toggleBtn = document.getElementById('toggle-sidebar');
-      const sidebar = document.querySelector('.sidebar');
-      toggleBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('sidebar-hidden');
-        toggleBtn.classList.toggle('active');
+        btnCompartilhar.disabled = true;
+        btnCompartilhar.innerText = "Aguarde...";
+
+        try {
+          if (typeof compartilhar !== "function")
+            return alert("Erro interno: Função de partilha não encontrada.");
+
+          const ok = await compartilhar();
+          if (!ok) alert("Falha ao registrar partilha. Tente novamente.");
+
+          if (typeof carregarPainel === "function") carregarPainel();
+
+        } catch (err) {
+          console.error(err);
+          alert("Erro ao compartilhar o link.");
+        }
+
+        btnCompartilhar.disabled = false;
+        btnCompartilhar.innerText = "Compartilhar";
       });
     });
   </script>

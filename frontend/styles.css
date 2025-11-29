@@ -1,8 +1,9 @@
 /* =============================
-   GanhaPlus — CSS Moderno Unico
-   Tema escuro, responsivo e elegante
-============================= */
+   GanhaPlus — CSS Moderno Completo
+   Tema escuro, responsivo, elegante
+   ============================= */
 
+/* ---------- Variáveis ---------- */
 :root {
   --bg: #0b0f14;
   --card: #0f1720;
@@ -12,70 +13,122 @@
   --text: #e6eef6;
   --danger: #ff6b6b;
   --success: #4cd964;
-  --sidebar-width: 220px;
+  --btn: #0af;
+  --radius: 10px;
+  --sidebar-width: 260px;
   --transition: 0.3s ease-in-out;
 }
 
+/* ---------- Reset e Base ---------- */
 * {
   box-sizing: border-box;
   font-family: 'Inter', system-ui, Arial, sans-serif;
   transition: var(--transition);
+  margin: 0;
+  padding: 0;
 }
 
-body.theme-dark {
-  margin: 0;
+body {
   background: linear-gradient(180deg, #071019, var(--bg));
   color: var(--text);
   min-height: 100vh;
 }
 
-/* =============================
-   Botões
-============================= */
-button, .btn-primary {
-  background: var(--accent);
-  color: #0b0f14;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.95rem;
-  transition: background 0.2s ease;
-}
-button:hover, .btn-primary:hover {
-  background: var(--accent-hover);
+/* ---------- Header / Topbar ---------- */
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: rgba(6,8,10,0.85);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 16px;
+  z-index: 100;
 }
 
-/* =============================
-   Botão Hambúrguer
-============================= */
+.header-title h1 {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.header-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.saldo small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+#saldo-valor {
+  font-weight: 700;
+}
+
+/* ---------- Botões ---------- */
+button, .btn-primary, .btn-ghost {
+  cursor: pointer;
+  border: none;
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.btn-primary {
+  background: var(--btn);
+  color: #fff;
+  padding: 9px 0;
+  border-radius: var(--radius);
+  width: 100%;
+  font-size: 0.9rem;
+}
+.btn-primary:hover {
+  background: #08c;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--text);
+  padding: 8px 10px;
+  border-radius: var(--radius);
+}
+
+.logout-btn {
+  background: var(--danger);
+  color: #fff;
+  padding: 10px 0;
+  border-radius: var(--radius);
+  width: 100%;
+}
+.logout-btn:hover {
+  background: #ff5252;
+}
+
+/* ---------- Botão Hamburger ---------- */
 .btn-hamburger {
-  position: fixed;
-  top: 12px;
-  left: 12px;
-  width: 35px;
-  height: 28px;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  z-index: 999;
-  padding: 0;
+  justify-content: center;
+  gap: 4px;
 }
-
 .btn-hamburger span {
   display: block;
-  height: 4px;
-  width: 100%;
-  background: var(--accent);
+  height: 3px;
+  background: var(--text);
   border-radius: 2px;
   transition: all 0.3s ease;
 }
-
-/* Estado ativo (X) */
 .btn-hamburger.active span:nth-child(1) {
   transform: rotate(45deg) translate(5px, 5px);
 }
@@ -86,213 +139,191 @@ button:hover, .btn-primary:hover {
   transform: rotate(-45deg) translate(6px, -6px);
 }
 
-/* =============================
-   Inputs
-============================= */
-input, select, textarea {
-  width: 100%;
-  padding: 10px 12px;
-  margin: 6px 0 12px 0;
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.06);
-  background: rgba(255,255,255,0.02);
-  color: var(--text);
-  font-size: 0.95rem;
-}
-
-/* =============================
-   Mensagens
-============================= */
-.mensagem {
-  margin: 6px 0;
-  font-size: 0.9rem;
-  color: var(--danger);
-}
-.mensagem.success { color: var(--success); }
-
-/* =============================
-   Container de Auth
-============================= */
-.container.auth {
-  max-width: 980px;
-  margin: 32px auto;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-  padding: 20px;
-}
-.card {
-  background: var(--card);
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.6);
-}
-.card h2, .card h3, .card h4 { margin-top: 0; }
-.slogan {
-  color: var(--muted);
-  margin-bottom: 12px;
-  font-weight: 400;
-}
-
-/* =============================
-   Sidebar (menu toggle)
-============================= */
+/* ---------- Sidebar ---------- */
 .sidebar {
   position: fixed;
-  left: 0;
   top: 0;
+  left: 0;
   width: var(--sidebar-width);
   height: 100vh;
-  background: rgba(10,12,16,0.85);
-  padding: 20px;
+  background: linear-gradient(180deg,#071018 0%, #071420 100%);
+  padding: 88px 16px 16px;
   border-radius: 0 12px 12px 0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   box-shadow: 0 0 24px rgba(0,0,0,0.5);
-  z-index: 10;
-
-  transform: translateX(0);
-  opacity: 1;
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  transition: transform var(--transition), opacity var(--transition);
+  z-index: 50;
 }
-
-/* Estado escondido */
-.sidebar.sidebar-hidden {
-  transform: translateX(-100%);
-  opacity: 0;
+.sidebar-hidden {
+  transform: translateX(-110%);
   pointer-events: none;
 }
-
-.sidebar h2.brand {
-  margin: 0 0 12px 0;
-  font-size: 1.6rem;
-  letter-spacing: 1px;
+.sidebar-header .brand {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 4px;
 }
-.sidebar nav {
-  flex-grow: 1;
+.sidebar-header .tag {
+  font-size: 0.75rem;
+  color: var(--muted);
 }
-.sidebar nav a {
-  color: var(--text);
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 20px;
+}
+.menu-item {
+  padding: 10px;
+  border-radius: var(--radius);
+  color: var(--muted);
   text-decoration: none;
-  display: block;
-  padding: 10px 12px;
-  border-radius: 8px;
-  margin-bottom: 6px;
   font-weight: 500;
-  transition: background 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease;
 }
-.sidebar nav a.active,
-.sidebar nav a:hover {
+.menu-item.active, .menu-item:hover {
   background: rgba(255,204,0,0.15);
+  color: var(--text);
 }
-.logout-btn {
-  background: var(--danger);
-  color: #fff;
-  margin-top: 12px;
-}
-.logout-btn:hover { background: #ff5252; }
 
-/* =============================
-   Main Content ajustado para toggle
-============================= */
-.main, .main-content {
+/* ---------- Main Content ---------- */
+.main-content {
   margin-left: calc(var(--sidebar-width) + 20px);
-  padding: 28px;
-  transition: margin-left var(--transition), transform var(--transition);
+  padding: 96px 28px 48px;
+  transition: margin-left var(--transition);
 }
-
-/* Quando sidebar escondida, main ocupa toda a largura */
-.sidebar.sidebar-hidden ~ .main,
 .sidebar.sidebar-hidden ~ .main-content {
   margin-left: 20px;
 }
 
-.topbar h1 {
+/* ---------- Topbar ---------- */
+.topbar h1, .topbar h2 {
   margin: 0 0 6px 0;
   font-weight: 600;
 }
 .subtitle {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--muted);
+  margin-bottom: 12px;
 }
 
-/* =============================
-   Cartões de Saldo e Tarefas
-============================= */
-.saldo-card {
-  background: linear-gradient(90deg, rgba(255,204,0,0.1), rgba(255,204,0,0.03));
-  border: 1px solid rgba(255,204,0,0.15);
-  padding: 14px 18px;
-  border-radius: 10px;
-  text-align: right;
-  width: 240px;
-  font-weight: 600;
-  margin-top: 8px;
+/* ---------- Cards de Tarefas ---------- */
+.tarefas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+  margin-top: 15px;
 }
-.tarefas-row {
+.tarefa-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+  padding: 14px;
   display: flex;
-  gap: 16px;
-  margin-top: 16px;
-  flex-wrap: wrap;
-}
-.tarefa-card, .form-card {
-  background: #071021;
-  padding: 16px;
-  border-radius: 12px;
-  width: 220px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  flex-direction: column;
+  justify-content: space-between;
+  aspect-ratio: 1 / 1; /* Quadrado */
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-.tarefa-card:hover, .form-card:hover {
+.tarefa-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+}
+.tarefa-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-grow: 1;
+}
+.tarefa-card-body h4 {
+  font-size: 1rem;
+}
+.tarefa-card-body p, .tarefa-card-body ul {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.tarefa-card-body ul li {
+  margin-bottom: 4px;
+}
+.tarefa-card-actions {
+  margin-top: auto;
 }
 
-/* =============================
-   Histórico e listas
-============================= */
-.history-list .card {
-  margin-bottom: 12px;
+/* ---------- Formulários ---------- */
+.form-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 15px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+.form-card label {
+  display: block;
+  margin-top: 8px;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+.form-card input, .form-card select, .form-card textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #333;
+  background: #222;
+  color: #fff;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+/* ---------- Histórico ---------- */
+.history-list .history-card {
   padding: 12px;
-  border-radius: 10px;
+  margin-bottom: 10px;
+  border-radius: var(--radius);
   background: rgba(15,23,32,0.9);
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 0.9rem;
 }
-.history-list .card small {
+.history-card .info strong {
+  color: var(--btn);
+}
+.history-card small {
   color: var(--muted);
 }
 
-/* =============================
-   Seções
-============================= */
-.section-block {
-  margin-top: 28px;
+/* ---------- Mensagens ---------- */
+.mensagem {
+  margin: 6px 0;
+  font-size: 0.9rem;
+  color: var(--danger);
 }
-.section-title { font-size: 1.2rem; margin-bottom: 6px; }
-.section-block p.subtitle { font-size: 0.85rem; margin-bottom: 12px; color: var(--muted); }
+.mensagem.success {
+  color: var(--success);
+}
 
-/* =============================
-   Responsividade
-============================= */
+/* ---------- Responsividade ---------- */
 @media (max-width: 900px) {
   .sidebar {
-    position: relative;
-    width: 100%;
-    height: auto;
-    margin-bottom: 12px;
-    padding: 16px;
+    position: fixed;
+    width: 80%;
+    transform: translateX(-110%);
+    z-index: 50;
   }
-  .main, .main-content {
+  .main-content {
     margin-left: 0;
-    padding: 16px;
+    padding: 80px 16px 48px;
   }
-  .container.auth {
-    grid-template-columns: 1fr;
-    padding: 16px;
+  .tarefas-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   }
-  .tarefas-row { justify-content: center; }
+  .tarefa-card {
+    aspect-ratio: 1 / 1;
+    padding: 12px;
+  }
+  .form-card {
+    padding: 14px;
+  }
 }

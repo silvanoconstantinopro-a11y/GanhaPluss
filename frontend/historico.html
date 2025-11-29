@@ -7,54 +7,82 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+
   <style>
-    .history-card { padding:10px; margin-bottom:10px; border-radius:8px; background:#111; color:#fff; border:1px solid #333; }
-    .history-card strong { color:#0af; }
-    .history-card small { display:block; color:#888; margin-top:4px; }
+    .history-card {
+      padding: 12px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      background-color: #111;
+      color: #fff;
+      border: 1px solid #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .history-card .info {
+      display: flex;
+      flex-direction: column;
+    }
+    .history-card strong {
+      color: #0af;
+    }
+    .history-card small {
+      color: #888;
+      margin-top: 4px;
+    }
   </style>
 </head>
 
-<body class="theme-dark dashboard-page">
+<body class="theme-dark dashboard-page" data-page="historico">
 
-  <button id="toggle-sidebar" class="btn-hamburger" aria-label="Menu">
+  <!-- Botão hamburger -->
+  <button id="toggle-sidebar" class="btn-hamburger" aria-label="Abrir menu">
     <span></span><span></span><span></span>
   </button>
 
-  <aside class="sidebar">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar" aria-label="Menu de navegação">
     <div class="sidebar-header">
       <h2 class="brand">GanhaPlus</h2>
       <span class="tag">Menu</span>
     </div>
     <nav class="menu">
-      <a href="principal.html">🏠 Painel</a>
-      <a href="tarefa.html">🎯 Tarefas</a>
-      <a class="active" href="historico.html">📜 Histórico</a>
-      <a href="saque.html">💸 Saque</a>
+      <a href="principal.html" class="menu-item">🏠 Painel</a>
+      <a href="tarefa.html" class="menu-item">🎯 Tarefas</a>
+      <a href="historico.html" class="menu-item active">📜 Histórico</a>
+      <a href="saque.html" class="menu-item">💸 Saque</a>
     </nav>
-    <button id="btn-logout" class="logout-btn">Sair</button>
+    <div class="sidebar-footer">
+      <button id="btn-logout" class="logout-btn">Sair</button>
+      <small class="muted">Versão 7.0</small>
+    </div>
   </aside>
 
+  <!-- Conteúdo principal -->
   <main class="main-content">
     <header class="topbar">
-      <h1>Histórico de Atividades</h1>
-      <p class="subtitle">Veja todas as ações realizadas na plataforma</p>
+      <h2>Histórico de Atividades</h2>
+      <p class="subtitle">Confira todas as ações realizadas na plataforma</p>
     </header>
 
     <section class="section-block">
-      <h2 class="section-title">Registos</h2>
+      <h3 class="section-title">Registros Recentes</h3>
       <div id="historico-lista" class="history-list">
         <!-- Histórico carregado dinamicamente pelo app.js -->
       </div>
     </section>
   </main>
 
-  <script src="app.js"></script>
-  <script>
+  <!-- Scripts -->
+  <script src="app.js" defer></script>
+  <script defer>
     document.addEventListener('DOMContentLoaded', async () => {
       const toggleBtn = document.getElementById('toggle-sidebar');
-      const sidebar = document.querySelector('.sidebar');
+      const sidebar = document.getElementById('sidebar');
 
-      toggleBtn.addEventListener('click', () => {
+      // Toggle Sidebar
+      toggleBtn?.addEventListener('click', () => {
         sidebar.classList.toggle('sidebar-hidden');
         toggleBtn.classList.toggle('active');
       });
@@ -65,11 +93,11 @@
         window.location.href = 'login.html';
       });
 
-      // Carregar histórico automaticamente
-      if (typeof carregarHistorico === 'function') {
+      // Carregar histórico
+      if(typeof carregarHistorico === 'function'){
         try {
           await carregarHistorico();
-        } catch (err) {
+        } catch(err){
           console.error("Erro ao carregar histórico:", err);
           alert("Erro ao carregar histórico. Faça login novamente.");
         }

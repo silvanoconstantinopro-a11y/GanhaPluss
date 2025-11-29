@@ -4,15 +4,37 @@
   <meta charset="utf-8">
   <title>GanhaPlus — Registar</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Fonte moderna -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- CSS específico para auth -->
   <link rel="stylesheet" href="login.css">
+
+  <style>
+    body.auth-page { display: flex; justify-content: center; align-items: center; min-height: 100vh; background:#0a0a0a; color:#fff; }
+    .auth-container { max-width: 400px; width: 100%; padding: 20px; background:#111; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.5); }
+    .auth-header { text-align: center; margin-bottom: 20px; }
+    .auth-header h1 { font-size:2rem; margin-bottom:4px; color:#0af; }
+    .auth-header .subtitle { font-size:0.9rem; color:#ccc; }
+    .auth-card h2 { margin-bottom: 15px; color:#fff; text-align:center; }
+    .input-group { margin-bottom: 15px; }
+    .input-group label { display:block; margin-bottom:4px; font-weight:500; }
+    .input-group input { width:100%; padding:10px; border-radius:6px; border:1px solid #333; background:#222; color:#fff; }
+    .btn-primary { width:100%; padding:12px; border:none; border-radius:6px; background:#0af; color:#111; font-weight:600; cursor:pointer; transition:0.3s; }
+    .btn-primary:hover { background:#08c; }
+    .mensagem { margin-bottom:10px; font-weight:bold; color:#ff6; text-align:center; }
+    .switch-page { margin-top:12px; text-align:center; font-size:0.9rem; }
+    .switch-page a { color:#0af; text-decoration:none; font-weight:500; }
+    .switch-page a:hover { text-decoration:underline; }
+  </style>
 </head>
 <body class="theme-dark auth-page">
 
   <div class="auth-container">
     <div class="auth-header">
       <h1 class="brand">GanhaPlus</h1>
-      <p class="subtitle">Ganhe Kwanzas assistindo e compartilhando!</p>
+      <p class="subtitle">Ganhe Kwanzas assistindo vídeos e compartilhando links!</p>
     </div>
 
     <div id="mensagem" class="mensagem"></div>
@@ -22,17 +44,17 @@
 
       <div class="input-group">
         <label for="reg-telefone">Telefone</label>
-        <input id="reg-telefone" type="text" placeholder="Digite seu número">
+        <input id="reg-telefone" type="text" placeholder="Ex: 923XXXXXX">
       </div>
 
       <div class="input-group">
         <label for="reg-senha">Senha</label>
-        <input id="reg-senha" type="password" placeholder="Crie uma senha">
+        <input id="reg-senha" type="password" placeholder="Crie uma senha segura">
       </div>
 
       <div class="input-group">
         <label for="reg-idade">Idade</label>
-        <input id="reg-idade" type="number" placeholder="18+">
+        <input id="reg-idade" type="number" placeholder="18+" min="13" max="120">
       </div>
 
       <button id="btn-registar" class="btn-primary">Registar</button>
@@ -42,5 +64,40 @@
   </div>
 
   <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const btnRegistar = document.getElementById('btn-registar');
+      const mensagem = document.getElementById('mensagem');
+
+      btnRegistar?.addEventListener('click', async () => {
+        const telefone = document.getElementById('reg-telefone').value.trim();
+        const senha = document.getElementById('reg-senha').value.trim();
+        const idade = parseInt(document.getElementById('reg-idade').value, 10);
+
+        if(!telefone || !senha || !idade) {
+          mensagem.textContent = 'Preencha todos os campos corretamente!';
+          return;
+        }
+
+        try {
+          // Chamada à função do app.js que registra o usuário
+          const resultado = await registrarUsuario({ telefone, senha, idade });
+          if(resultado.ok){
+            mensagem.style.color = '#0f0';
+            mensagem.textContent = 'Conta criada com sucesso! Redirecionando...';
+            setTimeout(()=> window.location.href = 'login.html', 1500);
+          } else {
+            mensagem.style.color = '#ff6';
+            mensagem.textContent = resultado.erro || 'Erro ao criar conta.';
+          }
+        } catch(err) {
+          mensagem.style.color = '#ff6';
+          mensagem.textContent = 'Erro de conexão. Tente novamente.';
+          console.error(err);
+        }
+      });
+    });
+  </script>
+
 </body>
 </html>
