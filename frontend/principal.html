@@ -5,10 +5,17 @@
   <title>GanhaPlus — Painel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   
+  <!-- Meta para reconhecer o site no AdSense -->
+  <meta name="google-adsense-account" content="ca-pub-2536628051221233">
+
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 
   <meta name="description" content="GanhaPlus — Painel de tarefas. Acompanhe o saldo, veja anúncios e compartilhe links para ganhar Kwanzas.">
+
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2536628051221233"
+     crossorigin="anonymous"></script>
 </head>
 
 <body class="theme-dark dashboard-page" data-page="principal">
@@ -59,6 +66,20 @@
       <p class="subtitle">Acompanhe seu saldo e realize tarefas para ganhar Kwanzas</p>
     </header>
 
+    <!-- Seção de anúncios -->
+    <section class="ads-section">
+      <h3>Anúncio</h3>
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-2536628051221233"
+           data-ad-slot="9093232867"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>
+           (adsbygoogle = window.adsbygoogle || []).push({});
+      </script>
+    </section>
+
     <section class="section-block">
       <h3 class="section-title">Tarefas Rápidas</h3>
       <p class="subtitle">Ganhe Kwanzas completando tarefas simples</p>
@@ -93,90 +114,6 @@
 
   <!-- Scripts -->
   <script src="app.js" defer></script>
-
-  <script defer>
-    document.addEventListener("DOMContentLoaded", () => {
-
-      /* ====== SIDEBAR ====== */
-      const toggleBtn = document.getElementById("toggle-sidebar");
-      const sidebar = document.getElementById("sidebar");
-
-      toggleBtn?.addEventListener("click", () => {
-        sidebar.classList.toggle("sidebar-hidden");
-        toggleBtn.classList.toggle("active");
-      });
-
-      /* ====== LOGOUT ====== */
-      const logout = () => {
-        localStorage.removeItem("gp_token");
-        window.location.href = "login.html";
-      };
-
-      [document.getElementById("btn-logout"), document.getElementById("btn-logout-2")]
-        .forEach(btn => btn?.addEventListener("click", logout));
-
-      /* ====== VERIFICAR TOKEN ====== */
-      const token = localStorage.getItem("gp_token");
-      if (!token) return logout();
-
-      /* ====== CARREGAR SALDO ====== */
-      if (typeof carregarPainel === "function") carregarPainel();
-
-      /* ====== BOTÕES DE TAREFAS ====== */
-      const btnAssistir = document.getElementById("btn-assistir");
-      const btnCompartilhar = document.getElementById("btn-compartilhar");
-
-      /* ------- Assistir Vídeos ------- */
-      btnAssistir?.addEventListener("click", async () => {
-        if (btnAssistir.disabled) return;
-
-        btnAssistir.disabled = true;
-        btnAssistir.innerText = "Aguarde...";
-
-        try {
-          if (typeof abrirSequenciaAnuncios !== "function")
-            return alert("Erro interno: Função de anúncios não encontrada.");
-
-          const ok = await abrirSequenciaAnuncios();
-          if (!ok) alert("Não há anúncios disponíveis no momento.");
-
-          if (typeof carregarPainel === "function") carregarPainel();
-
-        } catch (err) {
-          console.error(err);
-          alert("Erro ao assistir anúncios. Tente novamente.");
-        }
-
-        btnAssistir.disabled = false;
-        btnAssistir.innerText = "Assistir";
-      });
-
-      /* ------- Compartilhar Link ------- */
-      btnCompartilhar?.addEventListener("click", async () => {
-        if (btnCompartilhar.disabled) return;
-
-        btnCompartilhar.disabled = true;
-        btnCompartilhar.innerText = "Aguarde...";
-
-        try {
-          if (typeof compartilhar !== "function")
-            return alert("Erro interno: Função de partilha não encontrada.");
-
-          const ok = await compartilhar();
-          if (!ok) alert("Falha ao registrar partilha. Tente novamente.");
-
-          if (typeof carregarPainel === "function") carregarPainel();
-
-        } catch (err) {
-          console.error(err);
-          alert("Erro ao compartilhar o link.");
-        }
-
-        btnCompartilhar.disabled = false;
-        btnCompartilhar.innerText = "Compartilhar";
-      });
-    });
-  </script>
 
 </body>
 </html>

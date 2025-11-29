@@ -3,7 +3,7 @@
 // ================================
 
 // CONFIGURAÇÕES
-const BASE_URL = "https://ganhaplus.onrender.com"; // Se o frontend estiver servido pelo mesmo server.js
+const BASE_URL = "https://ganhapluss-1.onrender.com"; // Se o frontend estiver servido pelo mesmo server.js
 const TOKEN_KEY = "gp_token";
 const REWARD_AD = 500;      // Ganho total por 4 anúncios
 const REWARD_SHARE = 250;   // Ganho por compartilhamento
